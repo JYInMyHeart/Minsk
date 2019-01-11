@@ -63,7 +63,8 @@ class Parser(val lexer: Lexer) {
         | x == TokenType.lte
         | x == TokenType.gt
         | x == TokenType.gte
-        | x == TokenType.equal =>
+        | x == TokenType.equal
+        | x == TokenType.notequal =>
         0
       case TokenType.assign =>
         6

@@ -54,7 +54,15 @@ class Lexer(val pushBackInputStream: PushbackInputStream) {
       case '^' => Tokens(pow, "^", Span(lineCount, columnCount))
       case '&' => Tokens(and, "&", Span(lineCount, columnCount))
       case '|' => Tokens(or, "|", Span(lineCount, columnCount))
-      case '!' => Tokens(not, "!", Span(lineCount, columnCount))
+      case '!' =>
+        read()
+        ch match {
+          case '=' =>
+            Tokens(notequal, "!=", Span(lineCount, columnCount))
+          case _ =>
+            unRead(ch)
+            Tokens(not, "!", Span(lineCount, columnCount))
+        }
       case x if x == '-' =>
         read()
         var token: Tokens = null
