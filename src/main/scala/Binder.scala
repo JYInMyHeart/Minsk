@@ -55,7 +55,7 @@ class Binder(val variables:mutable.HashMap[VariableSymbol, AnyVal]) {
     val value = node.value.value match {
       case "true" => true
       case "false" => false
-      case x => x.toInt
+      case x => x.toDouble
     }
     BindLiteralExpression(value)
   }
@@ -163,19 +163,19 @@ object BoundBinaryOperator {
 
   private[this] def binaryOperators: List[BoundBinaryOperator] =
     List(
-      BoundBinaryOperator(TokenType.add, BindType.addition, int, int, int),
-      BoundBinaryOperator(TokenType.sub, BindType.subtraction, int, int, int),
-      BoundBinaryOperator(TokenType.div, BindType.division, int, int, double),
-      BoundBinaryOperator(TokenType.plus, BindType.multiplication, int, int, double),
-      BoundBinaryOperator(TokenType.pow, BindType.pow, int, int, double),
-      BoundBinaryOperator(TokenType.mod, BindType.mod, int, int, int),
-      BoundBinaryOperator(TokenType.lt, BindType.lt, int, int, bool),
-      BoundBinaryOperator(TokenType.gt, BindType.gt, int, int, bool),
-      BoundBinaryOperator(TokenType.lte, BindType.lte, int, int, bool),
-      BoundBinaryOperator(TokenType.gte, BindType.gte, int, int, bool),
-      BoundBinaryOperator(TokenType.equal, BindType.equal, int, int, bool),
+      BoundBinaryOperator(TokenType.add, BindType.addition, double, double, double),
+      BoundBinaryOperator(TokenType.sub, BindType.subtraction, double, double, double),
+      BoundBinaryOperator(TokenType.div, BindType.division, double, double, double),
+      BoundBinaryOperator(TokenType.plus, BindType.multiplication, double, double, double),
+      BoundBinaryOperator(TokenType.pow, BindType.pow, double, double, double),
+      BoundBinaryOperator(TokenType.mod, BindType.mod, double, double, double),
+      BoundBinaryOperator(TokenType.lt, BindType.lt, double, double, bool),
+      BoundBinaryOperator(TokenType.gt, BindType.gt, double, double, bool),
+      BoundBinaryOperator(TokenType.lte, BindType.lte, double, double, bool),
+      BoundBinaryOperator(TokenType.gte, BindType.gte, double, double, bool),
+      BoundBinaryOperator(TokenType.equal, BindType.equal, double, double, bool),
       BoundBinaryOperator(TokenType.equal, BindType.equal, bool, bool, bool),
-      BoundBinaryOperator(TokenType.notequal, BindType.notequal, int, int, bool),
+      BoundBinaryOperator(TokenType.notequal, BindType.notequal, double, double, bool),
       BoundBinaryOperator(TokenType.notequal, BindType.notequal, bool, bool, bool),
       BoundBinaryOperator(TokenType.and, BindType.and, bool, bool, bool),
       BoundBinaryOperator(TokenType.or, BindType.or, bool, bool, bool)
@@ -213,8 +213,8 @@ object BoundUnaryOperator {
   private[this] def unaryOperators: List[BoundUnaryOperator] =
     List(
       BoundUnaryOperator(TokenType.not, BindType.not, bool, bool),
-      BoundUnaryOperator(TokenType.sub, BindType.negation, int, bool),
-      BoundUnaryOperator(TokenType.add, BindType.identity, int, bool)
+      BoundUnaryOperator(TokenType.sub, BindType.negation, double, bool),
+      BoundUnaryOperator(TokenType.add, BindType.identity, double, bool)
     )
 
   def bind(tokenType: TokenType, operand: String): BoundUnaryOperator = {
@@ -227,7 +227,6 @@ object BoundUnaryOperator {
 }
 
 object TypeMapping {
-  val int = "Integer"
   val bool = "Boolean"
   val double = "Double"
 }

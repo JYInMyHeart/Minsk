@@ -5,7 +5,7 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, AnyVal]) {
     expression match {
       case node: BindLiteralExpression =>
         node.value match {
-          case i: Int => i
+          case i: Double => i
           case i: Boolean => i
           case _ =>
             throw new Exception(s"unknown literal type")
@@ -15,18 +15,18 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, AnyVal]) {
         val right = eval(node.boundRight)
         val op = node.bindType.bindType
         (left, right, op) match {
-          case (l: Int, r: Int, BindType.addition) => l + r
-          case (l: Int, r: Int, BindType.subtraction) => l - r
-          case (l: Int, r: Int, BindType.multiplication) => l.toDouble * r
-          case (l: Int, r: Int, BindType.division) => l.toDouble / r
-          case (l: Int, r: Int, BindType.pow) => math.pow(l, r)
-          case (l: Int, r: Int, BindType.mod) => l % r
-          case (l: Int, r: Int, BindType.lt) => l < r
-          case (l: Int, r: Int, BindType.lte) => l <= r
-          case (l: Int, r: Int, BindType.gt) => l > r
-          case (l: Int, r: Int, BindType.gte) => l >= r
-          case (l: Int, r: Int, BindType.equal) => l == r
-          case (l: Int, r: Int, BindType.notequal) => l != r
+          case (l: Double, r: Double, BindType.addition) => l + r
+          case (l: Double, r: Double, BindType.subtraction) => l - r
+          case (l: Double, r: Double, BindType.multiplication) => l.toDouble * r
+          case (l: Double, r: Double, BindType.division) => l.toDouble / r
+          case (l: Double, r: Double, BindType.pow) => math.pow(l, r)
+          case (l: Double, r: Double, BindType.mod) => l % r
+          case (l: Double, r: Double, BindType.lt) => l < r
+          case (l: Double, r: Double, BindType.lte) => l <= r
+          case (l: Double, r: Double, BindType.gt) => l > r
+          case (l: Double, r: Double, BindType.gte) => l >= r
+          case (l: Double, r: Double, BindType.equal) => l == r
+          case (l: Double, r: Double, BindType.notequal) => l != r
           case (l: Boolean, r: Boolean, BindType.and) => l && r
           case (l: Boolean, r: Boolean, BindType.or) => l || r
           case (l: Boolean, r: Boolean, BindType.equal) => l == r

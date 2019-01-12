@@ -9,9 +9,9 @@ class Parser(val lexer: Lexer) {
 
   def init(): Unit = {
     var token = lexer.nextToken()
-    while (token.tokenType != eof && token.tokenType != wrong) {
-      if (
-        token.tokenType != whiteSpace)
+    while (token.tokenType != eof  ) {
+      if (token.tokenType != wrong
+        && token.tokenType != whiteSpace)
         tokensList :+= token
       token = lexer.nextToken()
     }
@@ -22,7 +22,10 @@ class Parser(val lexer: Lexer) {
     val size = tokensList.length
     val index: Int = position + offset
     if (index >= size) {
-      return Tokens(TokenType.eof,"eof",tokensList.last.span)
+      if(tokensList.nonEmpty)
+        return Tokens(TokenType.eof,"eof",tokensList.last.span)
+      else
+        return Tokens(TokenType.eof,"eof",Span(0,0))
     }
     tokensList(index)
   }
