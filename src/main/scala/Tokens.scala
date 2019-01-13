@@ -49,7 +49,6 @@ object TokenType extends Enumeration {
   newline,
   eof,
   wrong,
-  equalsToken,
 
   //keyword
   falseKeyword,
