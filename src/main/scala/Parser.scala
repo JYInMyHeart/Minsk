@@ -78,13 +78,16 @@ class Parser(val lexer: Lexer) {
       return new UnaryNode(operatorToken, operand)
     } else
       left = parsePrimaryExpression()
-    while (true) {
+    var enable = true
+    while (enable) {
       val precedence = getBinaryOperatorPrecedence(current.tokenType)
       if (precedence == -1 || precedence <= parentPrecedence)
-        return left
-      val operatorToken = nextToken
-      val right = parseBinaryExpression(precedence)
-      left = new BinaryNode(left, operatorToken, right)
+        enable = false
+      else{
+        val operatorToken = nextToken
+        val right = parseBinaryExpression(precedence)
+        left = new BinaryNode(left, operatorToken, right)
+      }
     }
     left
   }

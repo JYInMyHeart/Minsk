@@ -40,7 +40,9 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, AnyVal]) {
         (value, node.bindType.bindType) match {
           case (o: Boolean, BindType.not) => !o
           case (o: Int, BindType.negation) => -o
-          case (o: Int, BindType.identity) => o
+          case (o: Double, BindType.negation) => -o
+          case (o: Int, BindType.identity) => -o
+          case (o: Double, BindType.identity) => o
           case _ => throw new LexerException("unknown node type")
         }
       case node: BindVariableExpression =>

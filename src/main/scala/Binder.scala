@@ -213,8 +213,10 @@ object BoundUnaryOperator {
   private[this] def unaryOperators: List[BoundUnaryOperator] =
     List(
       BoundUnaryOperator(TokenType.not, BindType.not, bool, bool),
-      BoundUnaryOperator(TokenType.sub, BindType.negation, double, bool),
-      BoundUnaryOperator(TokenType.add, BindType.identity, double, bool)
+      BoundUnaryOperator(TokenType.sub, BindType.negation, double, double),
+      BoundUnaryOperator(TokenType.sub, BindType.negation, int, int),
+      BoundUnaryOperator(TokenType.add, BindType.identity, double, double),
+      BoundUnaryOperator(TokenType.add, BindType.identity, int, int)
     )
 
   def bind(tokenType: TokenType, operand: String): BoundUnaryOperator = {
@@ -228,6 +230,7 @@ object BoundUnaryOperator {
 
 object TypeMapping {
   val bool = "Boolean"
+  val int = "Integer"
   val double = "Double"
 }
 

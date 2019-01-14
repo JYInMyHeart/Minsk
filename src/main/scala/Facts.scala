@@ -45,9 +45,9 @@ object Facts {
     tokenType match {
       case x if x == TokenType.add
         | x == TokenType.sub =>
-        3
+        6
       case TokenType.not =>
-        1
+        6
       case _ =>
         -1
     }
@@ -57,12 +57,12 @@ object Facts {
     tokenType match {
       case x if x == TokenType.add
         | x == TokenType.sub =>
-        1
+        4
       case x if x == TokenType.div
         | x == TokenType.mod
         | x == TokenType.plus
         | x == TokenType.pow =>
-        2
+        5
       case x if x == TokenType.and
         | x == TokenType.or =>
         1
@@ -72,9 +72,7 @@ object Facts {
         | x == TokenType.gte
         | x == TokenType.equal
         | x == TokenType.notequal =>
-        0
-      case TokenType.assign =>
-        6
+        3
       case _ =>
         -1
     }
