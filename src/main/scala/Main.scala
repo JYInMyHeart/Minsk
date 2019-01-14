@@ -4,7 +4,7 @@ import scala.io.StdIn
 object Main {
   def main(args: Array[String]): Unit = {
     import Printer._
-    val variables = new mutable.HashMap[VariableSymbol,AnyVal]()
+    val variables = new mutable.HashMap[VariableSymbol, AnyVal]()
     var showTree = false
     while (true) {
       print("> ")
@@ -31,7 +31,7 @@ object Main {
               x => colorPrintln(scala.io.AnsiColor.RED, x.toString)
             )
           } else {
-            val compilation = new Compilation(tree,variables)
+            val compilation = new Compilation(tree, variables)
             val result = compilation.evaluate()
             if (!result.diagnosticsBag.isEmpty) {
               result.diagnosticsBag.reports.foreach(

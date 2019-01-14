@@ -1,3 +1,4 @@
+import TokenType.TokenType
 
 abstract class Ast {
   def getKind(): TokenType.TokenType
@@ -20,8 +21,9 @@ object SyntaxTree{
   }
 }
 
-sealed class ExpressionTree(val expr: Expression) extends Expression {
-  override def getKind(): TokenType.TokenType = TokenType.expressionTree
+sealed class CompilationUnit(val expr: Expression,
+                             val eof:TokenType) extends Expression {
+  override def getKind(): TokenType.TokenType = TokenType.compilationUnit
 
   override def getChildren(): List[Expression] = List[Expression](expr)
 

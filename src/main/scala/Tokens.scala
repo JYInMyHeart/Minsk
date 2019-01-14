@@ -59,7 +59,7 @@ object TokenType extends Enumeration {
   binaryExpression,
   numberExpression,
   unaryExpression,
-  expressionTree,
+  compilationUnit,
   braceExpression,
   nameExpression,
   assignmentExpression

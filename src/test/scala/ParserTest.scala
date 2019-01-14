@@ -21,7 +21,7 @@ class ParserTest extends UnitSpec {
     val expression = SyntaxTree.parse(s"a $op1Text b $op2Text c")
     if(op1Precedence >= op2Precedence){
       val e = AssertingEnumerator(AssertingEnumerator.flatten(expression.root).iterator)
-      e.assertNode(TokenType.expressionTree)
+      e.assertNode(TokenType.compilationUnit)
       e.assertNode(TokenType.binaryExpression)
       e.assertNode(TokenType.binaryExpression)
       e.assertNode(TokenType.nameExpression)
@@ -34,7 +34,7 @@ class ParserTest extends UnitSpec {
       e.assertToken(TokenType.identifier,"c")
     }else{
       val e = AssertingEnumerator(AssertingEnumerator.flatten(expression.root).iterator)
-      e.assertNode(TokenType.expressionTree)
+      e.assertNode(TokenType.compilationUnit)
       e.assertNode(TokenType.binaryExpression)
       e.assertNode(TokenType.nameExpression)
       e.assertToken(TokenType.identifier,"a")
@@ -56,7 +56,7 @@ class ParserTest extends UnitSpec {
     val expression = SyntaxTree.parse(s"a $unText b $binText")
     if(unPrecedence >= binPrecedence){
       val e = AssertingEnumerator(AssertingEnumerator.flatten(expression.root).iterator)
-      e.assertNode(TokenType.expressionTree)
+      e.assertNode(TokenType.compilationUnit)
       e.assertNode(TokenType.binaryExpression)
       e.assertNode(TokenType.unaryExpression)
       e.assertToken(un,unText)
@@ -67,7 +67,7 @@ class ParserTest extends UnitSpec {
       e.assertToken(TokenType.identifier,"b")
     }else{
       val e = AssertingEnumerator(AssertingEnumerator.flatten(expression.root).iterator)
-      e.assertNode(TokenType.expressionTree)
+      e.assertNode(TokenType.compilationUnit)
       e.assertNode(TokenType.unaryExpression)
       e.assertToken(un,unText)
       e.assertNode(TokenType.binaryExpression)

@@ -47,7 +47,7 @@ class Parser(val lexer: Lexer) {
   }
 
   def parseTreeExpression(): Expression = {
-    new ExpressionTree(parseExpression())
+    new CompilationUnit(parseExpression(),TokenType.eof)
   }
 
 

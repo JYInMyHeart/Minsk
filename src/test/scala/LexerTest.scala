@@ -3,34 +3,25 @@ import TokenType.TokenType
 import scala.util.Random
 
 class LexerTest extends UnitSpec {
-  val tokens: List[(TokenType, String)] = List(
+  val dynamicTokens: List[(TokenType, String)] = List(
     //    (TokenType.keyword,""),
     //      (TokenType.func,""),
 
     (TokenType.identifier, "a_12"),
     (TokenType.literal, "1234"),
-    (TokenType.lb, "("),
-    (TokenType.rb, ")"),
-    (TokenType.assign, "="),
-    (TokenType.equal, "=="),
-    (TokenType.notequal, "!="),
-    (TokenType.lt, "<"),
-    (TokenType.gt, ">"),
-    (TokenType.lte, "<="),
-    (TokenType.gte, ">="),
-    (TokenType.add, "+"),
-    (TokenType.sub, "-"),
-    (TokenType.plus, "*"),
-    (TokenType.div, "/"),
-    (TokenType.mod, "%"),
-    (TokenType.and, "&"),
-    (TokenType.or, "|"),
-    (TokenType.not, "!"),
-    (TokenType.pow, "^"),
     (TokenType.eof, "\0"),
     (TokenType.falseKeyword, "false"),
     (TokenType.trueKeyword, "true")
   )
+
+  val fixedTokens: List[(TokenType.Value, String)] =
+    TokenType
+      .values
+      .map(k => (k,Facts.getText(k)))
+      .filter(_._2 != null)
+      .toList
+
+  val tokens: List[(TokenType.Value, String)] = fixedTokens ++ dynamicTokens
 
   val separators = List(
     (TokenType.whiteSpace, " "),

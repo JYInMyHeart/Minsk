@@ -20,8 +20,8 @@ class Binder(val variables:mutable.HashMap[VariableSymbol, AnyVal]) {
         bindUnaryExpression(tree.asInstanceOf[UnaryNode])
       case TokenType.numberExpression =>
         bindLiteralExpression(tree.asInstanceOf[LiteralNode])
-      case TokenType.expressionTree =>
-        bindExpression(tree.asInstanceOf[ExpressionTree].expr)
+      case TokenType.`compilationUnit` =>
+        bindExpression(tree.asInstanceOf[CompilationUnit].expr)
       case TokenType.braceExpression =>
         bindExpression(tree.asInstanceOf[BraceNode].op)
       case _ =>
