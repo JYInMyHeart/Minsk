@@ -1,0 +1,2 @@
+# Minsk
+A small compiler
