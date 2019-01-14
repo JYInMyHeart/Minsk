@@ -1,5 +1,6 @@
 import TokenType.TokenType
 import TokenType._
+import Facts._
 
 class Parser(val lexer: Lexer) {
   private[this] var tokensList: List[Tokens] = List()
@@ -49,43 +50,7 @@ class Parser(val lexer: Lexer) {
     new ExpressionTree(parseExpression())
   }
 
-  def getBinaryOperatorPrecedence(tokenType: TokenType): Int = {
-    tokenType match {
-      case x if x == TokenType.add
-        | x == TokenType.sub =>
-        1
-      case x if x == TokenType.div
-        | x == TokenType.mod
-        | x == TokenType.plus
-        | x == TokenType.pow =>
-        2
-      case x if x == TokenType.and
-        | x == TokenType.or =>
-        1
-      case x if x == TokenType.lt
-        | x == TokenType.lte
-        | x == TokenType.gt
-        | x == TokenType.gte
-        | x == TokenType.equal
-        | x == TokenType.notequal =>
-        0
-      case TokenType.assign =>
-        6
-      case _ =>
-        -1
-    }
-  }
 
-  def getUnaryOperatorPrecedence(tokenType: TokenType): Int =
-    tokenType match {
-      case x if x == TokenType.add
-        | x == TokenType.sub =>
-        3
-      case TokenType.not =>
-        1
-      case _ =>
-        -1
-    }
 
 
   def parseExpression():Expression = {
