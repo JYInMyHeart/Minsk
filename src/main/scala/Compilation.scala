@@ -25,7 +25,7 @@ case class Compilation(ast: SyntaxTree,
     if (!diagnosticsBag.isEmpty)
       return EvaluationResult(diagnosticsBag, null.asInstanceOf[AnyVal])
     val evaluator = Eval(variables)
-    val value = evaluator.eval(globalScope.expression)
+    val value = evaluator.eval(globalScope.statement)
     EvaluationResult(DiagnosticsBag(), value)
   }
 }

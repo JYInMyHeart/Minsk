@@ -80,6 +80,10 @@ class Lexer(val pushBackInputStream: PushbackInputStream) {
         Tokens(lb, "(", Span(lineCount, columnCount))
       case ')' =>
         Tokens(rb, ")", Span(lineCount, columnCount))
+      case '{' =>
+        Tokens(openBraceToken, "(", Span(lineCount, columnCount))
+      case '}' =>
+        Tokens(closeBraceToken, "(", Span(lineCount, columnCount))
       case '<' =>
         read()
         ch match {

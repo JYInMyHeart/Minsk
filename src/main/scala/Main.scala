@@ -25,8 +25,8 @@ object Main {
             """.stripMargin)
         case _ =>
           val tree = SyntaxTree.parse(str)
-          if (showTree)
-            prettyPrint(tree.root)
+//          if (showTree)
+//            prettyPrint(tree.root)
           if (tree.diagnostics.reports.nonEmpty) {
             tree.diagnostics.reports.foreach(
               x => colorPrintln(scala.io.AnsiColor.RED, x.toString)

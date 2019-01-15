@@ -3,10 +3,25 @@ import TokenType.TokenType
 abstract class Ast {
   def getKind: TokenType.TokenType
 
-  def getChildren: List[Expression]
+  def getChildren: List[Ast]
 }
 
 abstract class Expression extends Ast
+
+abstract class Statement extends Ast
+
+case class ExpressionStatement(expression: Expression) extends Statement {
+  override def getKind: TokenType = TokenType.expressionStatement
+
+  override def getChildren: List[Expression] = List(expression)
+}
+case class BlockStatement(openBraceToken:Tokens,
+                          statements:List[Statement],
+                          closeBraceToken:Tokens) extends Statement{
+  override def getKind: TokenType = TokenType.blockStatement
+
+  override def getChildren: List[Ast] = statements
+}
 
 case class SyntaxTree(diagnostics: DiagnosticsBag,
                       root: CompilationUnit)
@@ -15,18 +30,18 @@ object SyntaxTree{
   def parse(text: String): SyntaxTree = {
     val parser = new Parser(Lexer.newLexer(text))
     parser.init()
-    val expr = parser.parseTreeExpression()
+    val expr = parser.parseCompilationUnit()
     SyntaxTree(parser.diagnostics,CompilationUnit(expr,TokenType.eof))
   }
 }
 
-case class CompilationUnit( expr: Expression,
-                              eof:TokenType) extends Expression {
+case class CompilationUnit(statement: Statement,
+                           eof:TokenType) extends Statement {
   override def getKind: TokenType.TokenType = TokenType.compilationUnit
 
-  override def getChildren: List[Expression] = List[Expression](expr)
+  override def getChildren: List[Ast] = List[Ast](statement)
 
-  override def toString: String = s"ExpressionTree:$expr"
+  override def toString: String = s"ExpressionTree:$statement"
 }
 
 case class BinaryNode(left: Expression,

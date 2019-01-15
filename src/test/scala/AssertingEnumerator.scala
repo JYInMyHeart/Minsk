@@ -2,7 +2,7 @@ import TokenType.TokenType
 
 import scala.collection.mutable
 
-class AssertingEnumerator(enumerator:Iterator[Expression]) {
+class AssertingEnumerator(enumerator:Iterator[Ast]) {
 
   def assertNode(kind:TokenType): Unit ={
     assert(enumerator.hasNext)
@@ -23,11 +23,11 @@ class AssertingEnumerator(enumerator:Iterator[Expression]) {
 }
 object AssertingEnumerator{
 
-  def apply(enumerator: Iterator[Expression]): AssertingEnumerator =
+  def apply(enumerator: Iterator[Ast]): AssertingEnumerator =
     new AssertingEnumerator(enumerator)
-  def flatten(expression: Expression): List[Expression] = {
-    var res = List[Expression]()
-    val stack:mutable.Stack[Expression] = mutable.Stack()
+  def flatten(expression: Ast): List[Ast] = {
+    var res = List[Ast]()
+    val stack:mutable.Stack[Ast] = mutable.Stack()
     stack.push(expression)
     while(stack.nonEmpty){
       val n = stack.pop()

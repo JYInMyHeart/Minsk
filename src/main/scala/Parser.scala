@@ -10,7 +10,7 @@ class Parser(val lexer: Lexer) {
 
   def init(): Unit = {
     var token = lexer.nextToken()
-    while (token.tokenType != eof  ) {
+    while (token.tokenType != eof) {
       if (token.tokenType != wrong
         && token.tokenType != whiteSpace)
         tokensList :+= token
@@ -23,10 +23,10 @@ class Parser(val lexer: Lexer) {
     val size = tokensList.length
     val index: Int = position + offset
     if (index >= size) {
-      if(tokensList.nonEmpty)
-        return Tokens(TokenType.eof,"eof",tokensList.last.span)
+      if (tokensList.nonEmpty)
+        return Tokens(TokenType.eof, "eof", tokensList.last.span)
       else
-        return Tokens(TokenType.eof,"eof",Span(0,0))
+        return Tokens(TokenType.eof, "eof", Span(0, 0))
     }
     tokensList(index)
   }
@@ -46,20 +46,42 @@ class Parser(val lexer: Lexer) {
     Tokens(tokenType, null, current.span)
   }
 
-  def parseTreeExpression(): Expression = {
-    CompilationUnit(parseExpression(),TokenType.eof)
+  def parseCompilationUnit(): Statement = {
+    val statement = parseStatement()
+    eat(TokenType.eof)
+    CompilationUnit(statement, TokenType.eof)
   }
 
 
+  def parseBlockStatement(): BlockStatement = {
+    var statements: List[Statement] = List()
+    val openBrace = eat(TokenType.openBraceToken)
+    while (current.tokenType != eof
+      && current.tokenType != closeBraceToken) {
+      val statement = parseStatement()
+      statements :+= statement
+    }
+    val closeBrace = eat(closeBraceToken)
+    BlockStatement(openBrace, statements, closeBrace)
+  }
+
+  def parseExpressionStatement() =
+    ExpressionStatement(parseExpression())
 
 
-  def parseExpression():Expression = {
+  def parseStatement(): Statement = {
+    if (current.tokenType == TokenType.openBraceToken)
+      return parseBlockStatement()
+    parseExpressionStatement()
+  }
+
+  def parseExpression(): Expression = {
     parseAssignmentExpression()
   }
 
-  def parseAssignmentExpression():Expression = {
-    if(peek(0).tokenType == TokenType.identifier &&
-    peek(1).tokenType == TokenType.assign){
+  def parseAssignmentExpression(): Expression = {
+    if (peek(0).tokenType == TokenType.identifier &&
+      peek(1).tokenType == TokenType.assign) {
       val identifierToken = nextToken
       val operatorToken = nextToken
       val right = parseAssignmentExpression()
@@ -83,7 +105,7 @@ class Parser(val lexer: Lexer) {
       val precedence = getBinaryOperatorPrecedence(current.tokenType)
       if (precedence == -1 || precedence <= parentPrecedence)
         enable = false
-      else{
+      else {
         val operatorToken = nextToken
         val right = parseBinaryExpression(precedence)
         left = BinaryNode(left, operatorToken, right)
@@ -97,7 +119,7 @@ class Parser(val lexer: Lexer) {
     current.tokenType match {
       case TokenType.lb =>
         val left = nextToken
-        val expression = parseTreeExpression()
+        val expression = parseExpression()
         val right = eat(TokenType.rb)
         BraceNode(left, expression, right)
       case x if x == TokenType.trueKeyword || x == TokenType.falseKeyword =>

@@ -8,6 +8,18 @@ case class Binder(parent: BoundScope) {
   val diagnostics: DiagnosticsBag = DiagnosticsBag()
   var scope: BoundScope = BoundScope(parent)
 
+  def bindStatement(statement: Statement):BindStatement = {
+    (statement.getKind,statement) match {
+      case (TokenType.blockStatement,s:BlockStatement) =>
+        bindBlockStatement(s)
+      case (TokenType.expressionStatement,s:ExpressionStatement) =>
+        bindExpressionStatement(s)
+      case (TokenType.`compilationUnit`,s:CompilationUnit) =>
+        bindStatement(s.statement)
+      case _ =>
+        throw new LexerException(s"unexpected syntax ${statement.getKind}")
+    }
+  }
 
   def bindExpression(tree: Expression): BindExpression = {
     (tree.getKind, tree) match {
@@ -21,13 +33,27 @@ case class Binder(parent: BoundScope) {
         bindUnaryExpression(n)
       case (TokenType.numberExpression, n: LiteralNode) =>
         bindLiteralExpression(n)
-      case (TokenType.`compilationUnit`, n: CompilationUnit) =>
-        bindExpression(n.expr)
       case (TokenType.braceExpression, n: BraceNode) =>
         bindExpression(n.op)
       case _ =>
         throw new LexerException(s"unexpected syntax ${tree.getKind}")
     }
+  }
+
+  private def bindBlockStatement(statement: BlockStatement): BindBlockStatement = {
+    var statements:List[BindStatement] = List()
+    scope = BoundScope(scope)
+    for(s <- statement.statements){
+      val statement = bindStatement(s)
+      statements :+= statement
+    }
+    scope = scope.parent
+    BindBlockStatement(statements)
+  }
+
+  private def bindExpressionStatement(statement: ExpressionStatement): BindExpressionStatement = {
+    val expression = bindExpression(statement.expression)
+    BindExpressionStatement(expression)
   }
 
   private def bindNameExpression(node: NameNode): BindExpression = {
@@ -111,7 +137,7 @@ object Binder {
                       syntax: CompilationUnit): BoundGlobalScope = {
     val parentScope = createParentScope(previous)
     val binder = Binder(parentScope)
-    val expression = binder.bindExpression(syntax.expr)
+    val expression = binder.bindStatement(syntax.statement)
     val variables = binder.scope.getDeclaredVariables
     val diagnostics = binder.diagnostics
     if (previous != null)
@@ -143,8 +169,23 @@ abstract class BoundNode {
   def bindTypeClass: String
 }
 
-abstract class BindExpression extends BoundNode {
+abstract class BindExpression extends BoundNode
 
+
+abstract class BindStatement extends BoundNode{
+  def getKind:BindType.BindType
+}
+
+case class BindExpressionStatement(bindExpression: BindExpression) extends BindStatement{
+  override def bindTypeClass: String = bindExpression.bindTypeClass
+
+  override def getKind: BindType.BindType = BindType.expressionStatement
+}
+
+case class BindBlockStatement(bindStatements:List[BindStatement]) extends BindStatement{
+  override def bindTypeClass: String = null
+
+  override def getKind: BindType.BindType = BindType.blockStatement
 }
 
 case class BindBinaryExpression(bindType: BoundBinaryOperator,

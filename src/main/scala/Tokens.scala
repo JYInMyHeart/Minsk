@@ -6,9 +6,9 @@ class Tokens(val tokenType: TokenType,
   override def toString: String =
     s"<$tokenType :$value >  $span"
 
-  override def getKind(): TokenType = tokenType
+  override def getKind: TokenType = tokenType
 
-  override def getChildren(): List[Expression] = null
+  override def getChildren(): List[Ast] = null
 }
 
 object Tokens {
@@ -20,6 +20,7 @@ object Tokens {
 }
 
 object TokenType extends Enumeration {
+
   type TokenType = Value
   val
   //tokens
@@ -49,6 +50,8 @@ object TokenType extends Enumeration {
   newline,
   eof,
   wrong,
+  openBraceToken,
+  closeBraceToken,
 
   //keyword
   falseKeyword,
@@ -62,7 +65,11 @@ object TokenType extends Enumeration {
   compilationUnit,
   braceExpression,
   nameExpression,
-  assignmentExpression
+  assignmentExpression,
+
+  //statement
+  expressionStatement,
+  blockStatement
 
   = Value
 }
@@ -85,7 +92,11 @@ object BindType extends Enumeration {
   gt,
   gte,
   equal,
-  notequal
+  notequal,
+
+  //statement
+    blockStatement,
+  expressionStatement
   = Value
 }
 

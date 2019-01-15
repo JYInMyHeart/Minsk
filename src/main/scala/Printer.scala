@@ -10,13 +10,13 @@ object Printer {
 
   def prettyPrint(node: Expression, indent: String = "", isLast: Boolean = true) {
     var indents = indent
-    val enable = node.getChildren() != null
+    val enable = node.getChildren != null
     val marker = if (isLast) "└──" else "├──"
 
 
     colorPrint(BLUE, indent)
     colorPrint(BLUE, marker)
-    colorPrint(BLUE, node.getKind().toString)
+    colorPrint(BLUE, node.getKind.toString)
 
 
     node match {
@@ -31,11 +31,11 @@ object Printer {
     indents += (if (isLast) "    " else "│   ")
 
 
-    if (enable) {
-      val last = node.getChildren().last
-      for (child <- node.getChildren())
-        prettyPrint(child, indents, child == last)
-    }
+//    if (enable) {
+//      val last = node.getChildren.last
+//      for (child <- node.getChildren)
+//        prettyPrint(child, indents, child == last)
+//    }
 
   }
 }

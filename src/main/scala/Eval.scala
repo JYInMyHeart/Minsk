@@ -1,7 +1,29 @@
 import scala.collection.mutable
 
 class Eval(val variables: mutable.HashMap[VariableSymbol, AnyVal]) {
-  def eval(expression: BindExpression): AnyVal = {
+  private var lastValue:AnyVal = _
+  def eval(bindStatement:BindStatement):AnyVal = {
+    evalStatement(bindStatement)
+    lastValue
+  }
+  def evalStatement(statement: BindStatement): Unit = {
+    (statement.getKind,statement) match {
+      case (BindType.blockStatement,s:BindBlockStatement) =>
+        evalBlockStatement(s)
+      case (BindType.expressionStatement,s:BindExpressionStatement) =>
+        evalExpressionStatement(s)
+      case _ =>
+        throw new Exception(s"Unexpected statement ${statement.bindTypeClass}")
+    }
+  }
+  def evalBlockStatement(statement: BindBlockStatement): Unit = {
+    for(s <- statement.bindStatements)
+      evalStatement(s)
+  }
+  def evalExpressionStatement(statement: BindExpressionStatement): Unit = {
+    lastValue = evalExpression(statement.bindExpression)
+  }
+  def evalExpression(expression: BindExpression): AnyVal = {
     expression match {
       case node: BindLiteralExpression =>
         node.value match {
@@ -11,8 +33,8 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, AnyVal]) {
             throw new Exception(s"unknown literal type")
         }
       case node: BindBinaryExpression =>
-        val left = eval(node.boundLeft)
-        val right = eval(node.boundRight)
+        val left = evalExpression(node.boundLeft)
+        val right = evalExpression(node.boundRight)
         val op = node.bindType.bindType
         (left, right, op) match {
           case (l: Double, r: Double, BindType.addition) => l + r
@@ -36,7 +58,7 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, AnyVal]) {
         }
 
       case node: BindUnaryExpression =>
-        val value = eval(node.boundOperand)
+        val value = evalExpression(node.boundOperand)
         (value, node.bindType.bindType) match {
           case (o: Boolean, BindType.not) => !o
           case (o: Int, BindType.negation) => -o
@@ -48,7 +70,7 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, AnyVal]) {
       case node: BindVariableExpression =>
         variables(node.variableSymbol)
       case node: BindAssignmentExpression =>
-        val value = eval(node.expression)
+        val value = evalExpression(node.expression)
         variables(node.variable) = value
         value
       case _ => throw new LexerException("unknown node type")

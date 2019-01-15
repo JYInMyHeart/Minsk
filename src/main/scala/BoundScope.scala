@@ -26,8 +26,8 @@ case class BoundScope(parent:BoundScope) {
 }
 
 case class BoundGlobalScope(previous:BoundGlobalScope,
-                       diagnostics: DiagnosticsBag,
-                       variables:List[VariableSymbol],
-                       expression: BindExpression)  {
+                            diagnostics: DiagnosticsBag,
+                            variables:List[VariableSymbol],
+                            statement: BindStatement)  {
 
 }

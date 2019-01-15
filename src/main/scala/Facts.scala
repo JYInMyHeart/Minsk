@@ -24,6 +24,8 @@ object Facts {
       case TokenType.not => "!"
       case TokenType.pow => "^"
       case TokenType.eof => "\0"
+      case TokenType.openBraceToken => "{"
+      case TokenType.closeBraceToken => "}"
       case TokenType.falseKeyword => "false"
       case TokenType.trueKeyword => "true"
       case _ => null
