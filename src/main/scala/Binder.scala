@@ -90,7 +90,7 @@ case class Binder(parent: BoundScope) {
       diagnostics.reportCannotAssign(node.equalsToken.span,name)
 
     if (boundExpression.bindTypeClass != existingVariable.varType) {
-      diagnostics.reportCannotConvert(node.expression.asInstanceOf[Tokens].span, boundExpression.bindTypeClass, existingVariable.varType)
+      diagnostics.reportCannotConvert(node.equalsToken.span, boundExpression.bindTypeClass, existingVariable.varType)
       return boundExpression
     }
     BindAssignmentExpression(existingVariable, boundExpression)

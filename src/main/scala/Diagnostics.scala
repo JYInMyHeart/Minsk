@@ -17,19 +17,19 @@ object Diagnostics {
 }
 
 class DiagnosticsBag {
-  def reportCannotAssign(span: Span, name: String) = {
+  def reportCannotAssign(span: Span, name: String): Unit = {
     val msg = s"Variable $name cannot be assigned at $span!"
-    report(span,msg)
+    report(span, msg)
   }
 
-  def reportVariableAlreadyDeclared(span: Span, name: String) = {
+  def reportVariableAlreadyDeclared(span: Span, name: String): Unit = {
     val msg = s"Variable $name has already declared at $span."
-    report(span,msg)
+    report(span, msg)
   }
 
-  def reportCannotConvert(span: Span, bindTypeClass: String, varType: String) = {
-    val msg = s"Cannot convert variable from $bindTypeClass to $varType at $span"
-    report(span,msg)
+  def reportCannotConvert(span: Span, bindTypeClass: String, varType: String): Unit = {
+    val msg = s"Cannot convert variable from $varType to $bindTypeClass at $span."
+    report(span, msg)
   }
 
 
@@ -65,9 +65,9 @@ class DiagnosticsBag {
     report(span, msg)
   }
 
-  def reportUndefinedName(span: Span, name: String) = {
+  def reportUndefinedName(span: Span, name: String): Unit = {
     val msg = s"Undefined variable $name at $span"
-    report(span,msg)
+    report(span, msg)
   }
 
   def concat(diagnosticsBag: DiagnosticsBag): DiagnosticsBag = {
@@ -80,7 +80,7 @@ class DiagnosticsBag {
   def isEmpty: Boolean = reports.isEmpty
 }
 
-object DiagnosticsBag{
+object DiagnosticsBag {
   def apply(): DiagnosticsBag = new DiagnosticsBag()
 }
 
