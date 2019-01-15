@@ -25,15 +25,19 @@ class EvaluationTest extends UnitSpec {
     ("false", false),
     ("!true", false),
     ("!false", true),
-    ("(a = 10) * a", 100)
+    ("(a = 10) * a", 100),
+    ("a", 10),
+    ("b = a", 10),
+    ("b", 10)
   )
-
-  evalData.foreach{ x =>
+  val variables: mutable.HashMap[VariableSymbol, AnyVal] = mutable.HashMap[VariableSymbol, AnyVal]()
+  var previous: Compilation = _
+  evalData.foreach { x =>
     it should s"${Random.nextInt()}" in {
       val tree = SyntaxTree.parse(x._1)
-      val variables = mutable.HashMap[VariableSymbol,AnyVal]()
-      val compilation = new Compilation(tree,variables)
-      assertResult(x._2)( compilation.evaluate().value)
+      val compilation = Compilation(tree, previous)
+      previous = compilation
+      assertResult(x._2)(compilation.evaluate(variables).value)
     }
 
   }

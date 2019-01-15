@@ -17,6 +17,10 @@ object Diagnostics {
 }
 
 class DiagnosticsBag {
+  def reportCannotConvert(span: Span, bindTypeClass: String, varType: String) = {
+    val msg = s"Cannot convert variable from $bindTypeClass to $varType at $span"
+    report(span,msg)
+  }
 
 
   val reports: ListBuffer[Diagnostics] = new ListBuffer[Diagnostics]()
@@ -56,8 +60,11 @@ class DiagnosticsBag {
     report(span,msg)
   }
 
-  def concat(diagnosticsBag: DiagnosticsBag):Unit = {
+  def concat(diagnosticsBag: DiagnosticsBag): DiagnosticsBag = {
     reports ++= diagnosticsBag.reports
+    val resDiagnosticsBag = DiagnosticsBag()
+    resDiagnosticsBag.reports ++= reports
+    resDiagnosticsBag
   }
 
   def isEmpty: Boolean = reports.isEmpty

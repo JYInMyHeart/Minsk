@@ -4,12 +4,13 @@ import TypeMapping._
 
 import scala.collection.mutable
 
-class Binder(val variables:mutable.HashMap[VariableSymbol, AnyVal]) {
+case class Binder(parent:BoundScope) {
   val diagnostics: DiagnosticsBag = DiagnosticsBag()
+  var scope:BoundScope = BoundScope(parent)
+
 
   def bindExpression(tree: Expression): BindExpression = {
-    this.variables ++= variables
-    tree.getKind() match {
+    tree.getKind match {
       case TokenType.nameExpression =>
         bindNameExpression(tree.asInstanceOf[NameNode])
       case TokenType.assignmentExpression =>
@@ -25,30 +26,34 @@ class Binder(val variables:mutable.HashMap[VariableSymbol, AnyVal]) {
       case TokenType.braceExpression =>
         bindExpression(tree.asInstanceOf[BraceNode].op)
       case _ =>
-        throw new LexerException(s"unexpected syntax ${tree.getKind()}")
+        throw new LexerException(s"unexpected syntax ${tree.getKind}")
     }
   }
 
   private def bindNameExpression(node: NameNode): BindExpression = {
     val name = node.identifierToken.value
-    if (!variables.keys.map(_.name).exists(x => x == name)) {
+    val variable = scope.tryLookup(name)
+    if (variable == null) {
       diagnostics.reportUndefinedName(node.identifierToken.span, name)
       return BindLiteralExpression(0)
     }
-    val variable = variables.keys.find(_.name == name).get
     BindVariableExpression(variable)
   }
 
   private def bindAssignmentExpression(node: AssignmentNode): BindExpression = {
     val name = node.identifierToken.value
     val boundExpression = bindExpression(node.expression)
-    val existingVariable = variables.keys.find(_.name == name)
-    if(existingVariable.nonEmpty)
-      variables remove existingVariable.get
+    var existingVariable = scope.tryLookup(name)
+    if(existingVariable == null){
+      existingVariable = VariableSymbol(name,boundExpression.bindTypeClass)
+      scope.tryDeclare(existingVariable)
+    }
 
-    val variable = VariableSymbol(name,boundExpression.bindTypeClass)
-    variables(variable) = null.asInstanceOf[AnyVal]
-    BindAssignmentExpression(variable, boundExpression)
+    if(boundExpression.bindTypeClass != existingVariable.varType){
+      diagnostics.reportCannotConvert(node.expression.asInstanceOf[Tokens].span,boundExpression.bindTypeClass,existingVariable.varType)
+      return boundExpression
+    }
+    BindAssignmentExpression(existingVariable, boundExpression)
   }
 
   private def bindLiteralExpression(node: LiteralNode): BindExpression = {
@@ -85,7 +90,7 @@ class Binder(val variables:mutable.HashMap[VariableSymbol, AnyVal]) {
     val boundOperand = bindExpression(node.oprand)
     val boundOperatorKind =
       BoundUnaryOperator.bind(
-        node.op.getKind(),
+        node.op.getKind,
         boundOperand.bindTypeClass
       )
     if (boundOperatorKind == null) {
@@ -102,8 +107,38 @@ class Binder(val variables:mutable.HashMap[VariableSymbol, AnyVal]) {
 }
 
 object Binder {
-  def apply(variables:mutable.HashMap[VariableSymbol, AnyVal]): Binder = new Binder(variables)
+  def bindGlobalScope(previous:BoundGlobalScope,
+                      syntax:CompilationUnit): BoundGlobalScope = {
+    val parentScope = createParentScope(previous)
+    val binder = Binder(parentScope)
+    val expression = binder.bindExpression(syntax.expr)
+    val variables = binder.scope.getDeclaredVariables
+    val diagnostics = binder.diagnostics
+    if(previous != null)
+      diagnostics concat previous.diagnostics
+    BoundGlobalScope(previous,diagnostics,variables,expression)
+  }
+
+  def createParentScope(previous:BoundGlobalScope): BoundScope ={
+    var pre = previous
+    val stack = mutable.Stack[BoundGlobalScope]()
+    while(pre != null){
+      stack.push(pre)
+      pre = pre.previous
+    }
+    var parent:BoundScope = null
+    while(stack.nonEmpty){
+      pre = stack.pop()
+      val scope = BoundScope(parent)
+      for(v <- pre.variables)
+        scope.tryDeclare(v)
+      parent = scope
+    }
+    parent
+  }
 }
+
+
 
 abstract class BoundNode {
   def bindTypeClass: String

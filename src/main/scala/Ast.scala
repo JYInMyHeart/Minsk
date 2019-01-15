@@ -9,20 +9,19 @@ abstract class Ast {
 abstract class Expression extends Ast
 
 case class SyntaxTree(diagnostics: DiagnosticsBag,
-                      root: Expression,
-                      eofToken: TokenType.TokenType)
+                      root: CompilationUnit)
 
 object SyntaxTree{
   def parse(text: String): SyntaxTree = {
     val parser = new Parser(Lexer.newLexer(text))
     parser.init()
     val expr = parser.parseTreeExpression()
-    SyntaxTree(parser.diagnostics,expr,TokenType.eof)
+    SyntaxTree(parser.diagnostics,CompilationUnit(expr,TokenType.eof))
   }
 }
 
-sealed class CompilationUnit(val expr: Expression,
-                             val eof:TokenType) extends Expression {
+case class CompilationUnit( expr: Expression,
+                              eof:TokenType) extends Expression {
   override def getKind: TokenType.TokenType = TokenType.compilationUnit
 
   override def getChildren: List[Expression] = List[Expression](expr)

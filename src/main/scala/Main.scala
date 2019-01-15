@@ -6,6 +6,7 @@ object Main {
     import Printer._
     val variables = new mutable.HashMap[VariableSymbol, AnyVal]()
     var showTree = false
+    var previous: Compilation = null
     while (true) {
       print("> ")
       val str = StdIn.readLine()
@@ -31,14 +32,19 @@ object Main {
               x => colorPrintln(scala.io.AnsiColor.RED, x.toString)
             )
           } else {
-            val compilation = new Compilation(tree, variables)
-            val result = compilation.evaluate()
+            val compilation = if (previous == null)
+              Compilation(tree, previous)
+            else
+              previous.continueWith(tree)
+            val result = compilation.evaluate(variables)
             if (!result.diagnosticsBag.isEmpty) {
               result.diagnosticsBag.reports.foreach(
                 x => colorPrintln(scala.io.AnsiColor.RED, x.toString)
               )
-            } else
+            } else {
+              previous = compilation
               println(result.value)
+            }
           }
       }
     }

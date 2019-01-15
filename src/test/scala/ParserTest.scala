@@ -22,6 +22,7 @@ class ParserTest extends UnitSpec {
     if(op1Precedence >= op2Precedence){
       val e = AssertingEnumerator(AssertingEnumerator.flatten(expression.root).iterator)
       e.assertNode(TokenType.compilationUnit)
+      e.assertNode(TokenType.compilationUnit)
       e.assertNode(TokenType.binaryExpression)
       e.assertNode(TokenType.binaryExpression)
       e.assertNode(TokenType.nameExpression)
@@ -34,6 +35,7 @@ class ParserTest extends UnitSpec {
       e.assertToken(TokenType.identifier,"c")
     }else{
       val e = AssertingEnumerator(AssertingEnumerator.flatten(expression.root).iterator)
+      e.assertNode(TokenType.compilationUnit)
       e.assertNode(TokenType.compilationUnit)
       e.assertNode(TokenType.binaryExpression)
       e.assertNode(TokenType.nameExpression)

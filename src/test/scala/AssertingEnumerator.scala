@@ -7,14 +7,14 @@ class AssertingEnumerator(enumerator:Iterator[Expression]) {
   def assertNode(kind:TokenType): Unit ={
     assert(enumerator.hasNext)
     val current = enumerator.next()
-    assert(kind == current.getKind())
+    assert(kind == current.getKind)
     assert(!current.isInstanceOf[Tokens])
   }
 
   def assertToken(kind:TokenType,text:String): Unit = {
     assert(enumerator.hasNext)
     val current = enumerator.next()
-    assert(kind == current.getKind())
+    assert(kind == current.getKind)
     assert(current.isInstanceOf[Tokens])
     assert(text == current.asInstanceOf[Tokens].value)
   }
@@ -32,8 +32,8 @@ object AssertingEnumerator{
     while(stack.nonEmpty){
       val n = stack.pop()
       res :+= n
-      if(n.getChildren() != null)
-        for(child <- n.getChildren().reverse)
+      if(n.getChildren != null)
+        for(child <- n.getChildren.reverse)
           stack.push(child)
     }
     res
