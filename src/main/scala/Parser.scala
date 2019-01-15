@@ -1,6 +1,5 @@
-import TokenType.TokenType
-import TokenType._
 import Facts._
+import TokenType.{TokenType, _}
 
 class Parser(val lexer: Lexer) {
   private[this] var tokensList: List[Tokens] = List()
@@ -69,10 +68,29 @@ class Parser(val lexer: Lexer) {
     ExpressionStatement(parseExpression())
 
 
+  def parseVariableDeclaration(): VariableDeclarationNode = {
+    val expected =
+      if (current.tokenType == letKeyword)
+        letKeyword
+      else
+        varKeyword
+    val keyword = eat(expected)
+    val id = eat(identifier)
+    val eq = eat(assign)
+    val initializer = parseExpression()
+    VariableDeclarationNode(keyword, id, eq, initializer)
+  }
+
   def parseStatement(): Statement = {
-    if (current.tokenType == TokenType.openBraceToken)
-      return parseBlockStatement()
-    parseExpressionStatement()
+    current.tokenType match {
+      case TokenType.openBraceToken =>
+        parseBlockStatement()
+      case x if x == TokenType.letKeyword
+        | x == varKeyword =>
+        parseVariableDeclaration()
+      case _ =>
+        parseExpressionStatement()
+    }
   }
 
   def parseExpression(): Expression = {
@@ -97,7 +115,7 @@ class Parser(val lexer: Lexer) {
     if (unaryOperatorPrecedence != -1 && unaryOperatorPrecedence >= parentPrecedence) {
       val operatorToken = nextToken
       val operand = parseBinaryExpression(unaryOperatorPrecedence)
-      return UnaryNode(operatorToken, operand)
+      left = UnaryNode(operatorToken, operand)
     } else
       left = parsePrimaryExpression()
     var enable = true
@@ -118,21 +136,38 @@ class Parser(val lexer: Lexer) {
   def parsePrimaryExpression(): Expression = {
     current.tokenType match {
       case TokenType.lb =>
-        val left = nextToken
-        val expression = parseExpression()
-        val right = eat(TokenType.rb)
-        BraceNode(left, expression, right)
+        parseParenthesizedExpression()
       case x if x == TokenType.trueKeyword || x == TokenType.falseKeyword =>
-        val token = current
-        nextToken
-        LiteralNode(token)
+        parseBooleanLiteral()
       case TokenType.identifier =>
-        val token = current
-        nextToken
-        NameNode(token)
+        parseNameExpression()
+      case TokenType.literal =>
+        parseNumberLiteral()
       case _ =>
-        val literalNode = eat(TokenType.literal)
-        LiteralNode(literalNode)
+        parseNameExpression()
     }
+  }
+
+  private def parseBooleanLiteral(): LiteralNode = {
+    val token = current
+    nextToken
+    LiteralNode(token)
+  }
+
+  private def parseParenthesizedExpression(): BraceNode = {
+    val left = nextToken
+    val expression = parseExpression()
+    val right = eat(TokenType.rb)
+    BraceNode(left, expression, right)
+  }
+
+  private def parseNameExpression(): NameNode = {
+    val id = eat(identifier)
+    NameNode(id)
+  }
+
+  private def parseNumberLiteral(): LiteralNode = {
+    val number = eat(literal)
+    LiteralNode(number)
   }
 }

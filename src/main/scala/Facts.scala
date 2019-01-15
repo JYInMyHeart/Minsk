@@ -28,6 +28,8 @@ object Facts {
       case TokenType.closeBraceToken => "}"
       case TokenType.falseKeyword => "false"
       case TokenType.trueKeyword => "true"
+      case TokenType.varKeyword => "var"
+      case TokenType.letKeyword => "let"
       case _ => null
     }
   }

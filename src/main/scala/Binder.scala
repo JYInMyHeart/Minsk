@@ -8,14 +8,16 @@ case class Binder(parent: BoundScope) {
   val diagnostics: DiagnosticsBag = DiagnosticsBag()
   var scope: BoundScope = BoundScope(parent)
 
-  def bindStatement(statement: Statement):BindStatement = {
-    (statement.getKind,statement) match {
-      case (TokenType.blockStatement,s:BlockStatement) =>
+  def bindStatement(statement: Statement): BindStatement = {
+    (statement.getKind, statement) match {
+      case (TokenType.blockStatement, s: BlockStatement) =>
         bindBlockStatement(s)
-      case (TokenType.expressionStatement,s:ExpressionStatement) =>
+      case (TokenType.expressionStatement, s: ExpressionStatement) =>
         bindExpressionStatement(s)
-      case (TokenType.`compilationUnit`,s:CompilationUnit) =>
+      case (TokenType.`compilationUnit`, s: CompilationUnit) =>
         bindStatement(s.statement)
+      case (TokenType.variableDeclaration, s: VariableDeclarationNode) =>
+        bindVariableDeclaration(s)
       case _ =>
         throw new LexerException(s"unexpected syntax ${statement.getKind}")
     }
@@ -40,10 +42,20 @@ case class Binder(parent: BoundScope) {
     }
   }
 
+  private def bindVariableDeclaration(statement: VariableDeclarationNode): BindVariableStatement = {
+    val name = statement.identifier.value
+    val isReadOnly = statement.keyword.tokenType == TokenType.letKeyword
+    val initializer = bindExpression(statement.expression)
+    val variable = VariableSymbol(name, initializer.bindTypeClass, isReadOnly)
+    if (!scope.tryDeclare(variable))
+      diagnostics.reportVariableAlreadyDeclared(statement.identifier.span, name)
+    BindVariableStatement(variable, initializer)
+  }
+
   private def bindBlockStatement(statement: BlockStatement): BindBlockStatement = {
-    var statements:List[BindStatement] = List()
+    var statements: List[BindStatement] = List()
     scope = BoundScope(scope)
-    for(s <- statement.statements){
+    for (s <- statement.statements) {
       val statement = bindStatement(s)
       statements :+= statement
     }
@@ -71,9 +83,11 @@ case class Binder(parent: BoundScope) {
     val boundExpression = bindExpression(node.expression)
     var existingVariable = scope.tryLookup(name)
     if (existingVariable == null) {
-      existingVariable = VariableSymbol(name, boundExpression.bindTypeClass)
-      scope.tryDeclare(existingVariable)
+      diagnostics.reportUndefinedName(node.identifierToken.span,name)
+      return boundExpression
     }
+    if(existingVariable.isReadOnly)
+      diagnostics.reportCannotAssign(node.equalsToken.span,name)
 
     if (boundExpression.bindTypeClass != existingVariable.varType) {
       diagnostics.reportCannotConvert(node.expression.asInstanceOf[Tokens].span, boundExpression.bindTypeClass, existingVariable.varType)
@@ -172,21 +186,22 @@ abstract class BoundNode {
 abstract class BindExpression extends BoundNode
 
 
-abstract class BindStatement extends BoundNode{
-  def getKind:BindType.BindType
+abstract class BindStatement extends BoundNode {
+  def getKind: BindType.BindType
 }
 
-case class BindExpressionStatement(bindExpression: BindExpression) extends BindStatement{
+case class BindExpressionStatement(bindExpression: BindExpression) extends BindStatement {
   override def bindTypeClass: String = bindExpression.bindTypeClass
 
   override def getKind: BindType.BindType = BindType.expressionStatement
 }
 
-case class BindBlockStatement(bindStatements:List[BindStatement]) extends BindStatement{
+case class BindBlockStatement(bindStatements: List[BindStatement]) extends BindStatement {
   override def bindTypeClass: String = null
 
   override def getKind: BindType.BindType = BindType.blockStatement
 }
+
 
 case class BindBinaryExpression(bindType: BoundBinaryOperator,
                                 boundLeft: BindExpression,
@@ -208,6 +223,13 @@ sealed class BoundBinaryOperator(val tokenType: TokenType,
                                  val left: String,
                                  val right: String,
                                  val result: String)
+
+case class BindVariableStatement(variableSymbol: VariableSymbol,
+                                 initializer: BindExpression) extends BindStatement {
+  override def bindTypeClass: String = variableSymbol.varType
+
+  override def getKind: BindType = BindType.variableDeclaration
+}
 
 case class BindVariableExpression(variableSymbol: VariableSymbol) extends BindExpression {
   override def bindTypeClass: String = variableSymbol.varType

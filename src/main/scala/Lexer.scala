@@ -28,6 +28,8 @@ class Lexer(val pushBackInputStream: PushbackInputStream) {
     text match {
       case "false" => falseKeyword
       case "true" => trueKeyword
+      case "var" => varKeyword
+      case "let" => letKeyword
       case _ => identifier
     }
   }

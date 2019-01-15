@@ -1,28 +1,42 @@
 import scala.collection.mutable
 
 class Eval(val variables: mutable.HashMap[VariableSymbol, AnyVal]) {
-  private var lastValue:AnyVal = _
-  def eval(bindStatement:BindStatement):AnyVal = {
+  private var lastValue: AnyVal = _
+
+  def eval(bindStatement: BindStatement): AnyVal = {
     evalStatement(bindStatement)
     lastValue
   }
+
+
   def evalStatement(statement: BindStatement): Unit = {
-    (statement.getKind,statement) match {
-      case (BindType.blockStatement,s:BindBlockStatement) =>
+    (statement.getKind, statement) match {
+      case (BindType.blockStatement, s: BindBlockStatement) =>
         evalBlockStatement(s)
-      case (BindType.expressionStatement,s:BindExpressionStatement) =>
+      case (BindType.expressionStatement, s: BindExpressionStatement) =>
         evalExpressionStatement(s)
+      case (BindType.variableDeclaration, s: BindVariableStatement) =>
+        evalVariableStatement(s)
       case _ =>
         throw new Exception(s"Unexpected statement ${statement.bindTypeClass}")
     }
   }
+
+  def evalVariableStatement(s: BindVariableStatement): Unit = {
+    val value = evalExpression(s.initializer)
+    variables(s.variableSymbol) = value
+    lastValue = value
+  }
+
   def evalBlockStatement(statement: BindBlockStatement): Unit = {
-    for(s <- statement.bindStatements)
+    for (s <- statement.bindStatements)
       evalStatement(s)
   }
+
   def evalExpressionStatement(statement: BindExpressionStatement): Unit = {
     lastValue = evalExpression(statement.bindExpression)
   }
+
   def evalExpression(expression: BindExpression): AnyVal = {
     expression match {
       case node: BindLiteralExpression =>

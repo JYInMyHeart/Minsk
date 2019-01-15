@@ -1,8 +1,6 @@
-class VariableSymbol(val name:String,
-                     val varType:String) {
+case class VariableSymbol(name: String,
+                          varType: String,
+                          isReadOnly: Boolean) {
 
 }
-object VariableSymbol{
-  def apply(name: String,
-            varType: String): VariableSymbol = new VariableSymbol(name, varType)
-}
+

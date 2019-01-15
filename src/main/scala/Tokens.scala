@@ -56,6 +56,8 @@ object TokenType extends Enumeration {
   //keyword
   falseKeyword,
   trueKeyword,
+  varKeyword,
+  letKeyword,
 
 
   //expressions
@@ -67,8 +69,10 @@ object TokenType extends Enumeration {
   nameExpression,
   assignmentExpression,
 
+
   //statement
   expressionStatement,
+  variableDeclaration,
   blockStatement
 
   = Value
@@ -95,8 +99,9 @@ object BindType extends Enumeration {
   notequal,
 
   //statement
-    blockStatement,
-  expressionStatement
+  blockStatement,
+  expressionStatement,
+  variableDeclaration
   = Value
 }
 

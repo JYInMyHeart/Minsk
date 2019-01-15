@@ -93,3 +93,12 @@ case class AssignmentNode(identifierToken: Tokens,
 
   override def getChildren: List[Expression] = List(identifierToken, equalsToken, expression)
 }
+
+case class VariableDeclarationNode(keyword:Tokens,
+                                   identifier:Tokens,
+                                   equalsToken:Tokens,
+                                   expression: Expression) extends Statement  {
+  override def getKind: TokenType = TokenType.variableDeclaration
+
+  override def getChildren: List[Ast] = List(keyword,identifier,equalsToken,expression)
+}

@@ -17,6 +17,16 @@ object Diagnostics {
 }
 
 class DiagnosticsBag {
+  def reportCannotAssign(span: Span, name: String) = {
+    val msg = s"Variable $name cannot be assigned at $span!"
+    report(span,msg)
+  }
+
+  def reportVariableAlreadyDeclared(span: Span, name: String) = {
+    val msg = s"Variable $name has already declared at $span."
+    report(span,msg)
+  }
+
   def reportCannotConvert(span: Span, bindTypeClass: String, varType: String) = {
     val msg = s"Cannot convert variable from $bindTypeClass to $varType at $span"
     report(span,msg)
