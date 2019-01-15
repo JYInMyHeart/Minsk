@@ -47,7 +47,7 @@ class Parser(val lexer: Lexer) {
   }
 
   def parseTreeExpression(): Expression = {
-    new CompilationUnit(parseExpression(),TokenType.eof)
+    CompilationUnit(parseExpression(),TokenType.eof)
   }
 
 
@@ -63,7 +63,7 @@ class Parser(val lexer: Lexer) {
       val identifierToken = nextToken
       val operatorToken = nextToken
       val right = parseAssignmentExpression()
-      return new AssignmentNode(identifierToken,operatorToken,right)
+      return AssignmentNode(identifierToken, operatorToken, right)
     }
     parseBinaryExpression()
   }
@@ -75,7 +75,7 @@ class Parser(val lexer: Lexer) {
     if (unaryOperatorPrecedence != -1 && unaryOperatorPrecedence >= parentPrecedence) {
       val operatorToken = nextToken
       val operand = parseBinaryExpression(unaryOperatorPrecedence)
-      return new UnaryNode(operatorToken, operand)
+      return UnaryNode(operatorToken, operand)
     } else
       left = parsePrimaryExpression()
     var enable = true
@@ -86,7 +86,7 @@ class Parser(val lexer: Lexer) {
       else{
         val operatorToken = nextToken
         val right = parseBinaryExpression(precedence)
-        left = new BinaryNode(left, operatorToken, right)
+        left = BinaryNode(left, operatorToken, right)
       }
     }
     left
@@ -99,18 +99,18 @@ class Parser(val lexer: Lexer) {
         val left = nextToken
         val expression = parseTreeExpression()
         val right = eat(TokenType.rb)
-        new BraceNode(left, expression, right)
+        BraceNode(left, expression, right)
       case x if x == TokenType.trueKeyword || x == TokenType.falseKeyword =>
         val token = current
         nextToken
-        new LiteralNode(token)
+        LiteralNode(token)
       case TokenType.identifier =>
         val token = current
         nextToken
-        new NameNode(token)
+        NameNode(token)
       case _ =>
         val literalNode = eat(TokenType.literal)
-        new LiteralNode(literalNode)
+        LiteralNode(literalNode)
     }
   }
 }

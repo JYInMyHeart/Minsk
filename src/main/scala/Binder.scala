@@ -4,27 +4,27 @@ import TypeMapping._
 
 import scala.collection.mutable
 
-case class Binder(parent:BoundScope) {
+case class Binder(parent: BoundScope) {
   val diagnostics: DiagnosticsBag = DiagnosticsBag()
-  var scope:BoundScope = BoundScope(parent)
+  var scope: BoundScope = BoundScope(parent)
 
 
   def bindExpression(tree: Expression): BindExpression = {
-    tree.getKind match {
-      case TokenType.nameExpression =>
-        bindNameExpression(tree.asInstanceOf[NameNode])
-      case TokenType.assignmentExpression =>
-        bindAssignmentExpression(tree.asInstanceOf[AssignmentNode])
-      case TokenType.binaryExpression =>
-        bindBinaryExpression(tree.asInstanceOf[BinaryNode])
-      case TokenType.unaryExpression =>
-        bindUnaryExpression(tree.asInstanceOf[UnaryNode])
-      case TokenType.numberExpression =>
-        bindLiteralExpression(tree.asInstanceOf[LiteralNode])
-      case TokenType.`compilationUnit` =>
-        bindExpression(tree.asInstanceOf[CompilationUnit].expr)
-      case TokenType.braceExpression =>
-        bindExpression(tree.asInstanceOf[BraceNode].op)
+    (tree.getKind, tree) match {
+      case (TokenType.nameExpression, n: NameNode) =>
+        bindNameExpression(n)
+      case (TokenType.assignmentExpression, n: AssignmentNode) =>
+        bindAssignmentExpression(n)
+      case (TokenType.binaryExpression, n: BinaryNode) =>
+        bindBinaryExpression(n)
+      case (TokenType.unaryExpression, n: UnaryNode) =>
+        bindUnaryExpression(n)
+      case (TokenType.numberExpression, n: LiteralNode) =>
+        bindLiteralExpression(n)
+      case (TokenType.`compilationUnit`, n: CompilationUnit) =>
+        bindExpression(n.expr)
+      case (TokenType.braceExpression, n: BraceNode) =>
+        bindExpression(n.op)
       case _ =>
         throw new LexerException(s"unexpected syntax ${tree.getKind}")
     }
@@ -44,13 +44,13 @@ case class Binder(parent:BoundScope) {
     val name = node.identifierToken.value
     val boundExpression = bindExpression(node.expression)
     var existingVariable = scope.tryLookup(name)
-    if(existingVariable == null){
-      existingVariable = VariableSymbol(name,boundExpression.bindTypeClass)
+    if (existingVariable == null) {
+      existingVariable = VariableSymbol(name, boundExpression.bindTypeClass)
       scope.tryDeclare(existingVariable)
     }
 
-    if(boundExpression.bindTypeClass != existingVariable.varType){
-      diagnostics.reportCannotConvert(node.expression.asInstanceOf[Tokens].span,boundExpression.bindTypeClass,existingVariable.varType)
+    if (boundExpression.bindTypeClass != existingVariable.varType) {
+      diagnostics.reportCannotConvert(node.expression.asInstanceOf[Tokens].span, boundExpression.bindTypeClass, existingVariable.varType)
       return boundExpression
     }
     BindAssignmentExpression(existingVariable, boundExpression)
@@ -87,7 +87,7 @@ case class Binder(parent:BoundScope) {
   }
 
   private def bindUnaryExpression(node: UnaryNode): BindExpression = {
-    val boundOperand = bindExpression(node.oprand)
+    val boundOperand = bindExpression(node.operand)
     val boundOperatorKind =
       BoundUnaryOperator.bind(
         node.op.getKind,
@@ -107,37 +107,36 @@ case class Binder(parent:BoundScope) {
 }
 
 object Binder {
-  def bindGlobalScope(previous:BoundGlobalScope,
-                      syntax:CompilationUnit): BoundGlobalScope = {
+  def bindGlobalScope(previous: BoundGlobalScope,
+                      syntax: CompilationUnit): BoundGlobalScope = {
     val parentScope = createParentScope(previous)
     val binder = Binder(parentScope)
     val expression = binder.bindExpression(syntax.expr)
     val variables = binder.scope.getDeclaredVariables
     val diagnostics = binder.diagnostics
-    if(previous != null)
+    if (previous != null)
       diagnostics concat previous.diagnostics
-    BoundGlobalScope(previous,diagnostics,variables,expression)
+    BoundGlobalScope(previous, diagnostics, variables, expression)
   }
 
-  def createParentScope(previous:BoundGlobalScope): BoundScope ={
+  def createParentScope(previous: BoundGlobalScope): BoundScope = {
     var pre = previous
     val stack = mutable.Stack[BoundGlobalScope]()
-    while(pre != null){
+    while (pre != null) {
       stack.push(pre)
       pre = pre.previous
     }
-    var parent:BoundScope = null
-    while(stack.nonEmpty){
+    var parent: BoundScope = null
+    while (stack.nonEmpty) {
       pre = stack.pop()
       val scope = BoundScope(parent)
-      for(v <- pre.variables)
+      for (v <- pre.variables)
         scope.tryDeclare(v)
       parent = scope
     }
     parent
   }
 }
-
 
 
 abstract class BoundNode {
