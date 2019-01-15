@@ -81,6 +81,17 @@ class Parser(val lexer: Lexer) {
     VariableDeclarationNode(keyword, id, eq, initializer)
   }
 
+  def parseIfStatement(): IfStatement = {
+    val ifKeyword = eat(TokenType.ifKeyword)
+    val openParentheses = eat(TokenType.lb)
+    val condition = parseExpression()
+    val closeParentheses = eat(TokenType.rb)
+    val expr1 = parseStatement()
+    val elseKeyword = eat(TokenType.elseKeyword)
+    val expr2 = parseStatement()
+    IfStatement(ifKeyword,openParentheses,condition,closeParentheses,expr1,elseKeyword,expr2)
+  }
+
   def parseStatement(): Statement = {
     current.tokenType match {
       case TokenType.openBraceToken =>
@@ -88,6 +99,8 @@ class Parser(val lexer: Lexer) {
       case x if x == TokenType.letKeyword
         | x == varKeyword =>
         parseVariableDeclaration()
+      case TokenType.ifKeyword =>
+        parseIfStatement()
       case _ =>
         parseExpressionStatement()
     }

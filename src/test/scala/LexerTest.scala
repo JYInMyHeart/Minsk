@@ -11,13 +11,19 @@ class LexerTest extends UnitSpec {
     (TokenType.literal, "1234"),
     (TokenType.eof, "\0"),
     (TokenType.falseKeyword, "false"),
-    (TokenType.trueKeyword, "true")
+    (TokenType.trueKeyword, "true"),
+    (TokenType.ifKeyword, "if"),
+    (TokenType.elseKeyword, "else"),
+    (TokenType.forKeyword, "for"),
+    (TokenType.whileKeyword, "while"),
+    (TokenType.varKeyword, "var"),
+    (TokenType.letKeyword, "let")
   )
 
   val fixedTokens: List[(TokenType.Value, String)] =
     TokenType
       .values
-      .map(k => (k,Facts.getText(k)))
+      .map(k => (k, Facts.getText(k)))
       .filter(_._2 != null)
       .toList
 
@@ -89,30 +95,21 @@ class LexerTest extends UnitSpec {
 
   def getTokenPairs: List[(TokenType, String, TokenType, String)] = {
     var list: List[(TokenType.TokenType, String, TokenType.TokenType, String)] = List()
-    tokens.foreach {
-      x =>
-        tokens.foreach {
-          y =>
-            if (!requireSeparator(x._1, y._1))
-              list :+= (x._1, x._2, y._1, y._2)
-        }
-    }
+    for (x <- tokens; y <- tokens)
+      yield {
+        if (!requireSeparator(x._1, y._1))
+          list :+= (x._1, x._2, y._1, y._2)
+      }
     list.distinct
   }
 
   def getTokenPairsWithSeparators: List[(TokenType, String, TokenType, String, TokenType, String)] = {
     var list: List[(TokenType.TokenType, String, TokenType.TokenType, String, TokenType, String)] = List()
-    tokens.foreach {
-      x =>
-        separators.foreach {
-          s =>
-            tokens.foreach {
-              y =>
-                if (requireSeparator(x._1, y._1))
-                  list :+= (x._1, x._2, s._1, s._2, y._1, y._2)
-            }
-        }
-    }
+    for (x <- tokens; s <- separators; y <- tokens)
+      yield {
+        if (requireSeparator(x._1, y._1))
+          list :+= (x._1, x._2, s._1, s._2, y._1, y._2)
+      }
     list.distinct
   }
 
@@ -130,7 +127,7 @@ class LexerTest extends UnitSpec {
     }
   }
 
-  getTokenPairsWithSeparators.foreach{ x =>
+  getTokenPairsWithSeparators.foreach { x =>
     it should s"be a ${x._1} and ${x._3} ${new Random().nextInt()}" in {
       val lexer = Lexer.newLexer(x._2 + x._4 + x._6)
       val token1 = lexer.nextToken()

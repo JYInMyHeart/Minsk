@@ -30,6 +30,10 @@ object Facts {
       case TokenType.trueKeyword => "true"
       case TokenType.varKeyword => "var"
       case TokenType.letKeyword => "let"
+      case TokenType.ifKeyword => "if"
+      case TokenType.elseKeyword => "else"
+      case TokenType.forKeyword => "for"
+      case TokenType.whileKeyword => "while"
       case _ => null
     }
   }

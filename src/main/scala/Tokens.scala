@@ -21,6 +21,7 @@ object Tokens {
 
 object TokenType extends Enumeration {
 
+
   type TokenType = Value
   val
   //tokens
@@ -58,6 +59,10 @@ object TokenType extends Enumeration {
   trueKeyword,
   varKeyword,
   letKeyword,
+  ifKeyword,
+  forKeyword,
+  whileKeyword,
+  elseKeyword,
 
 
   //expressions
@@ -73,7 +78,10 @@ object TokenType extends Enumeration {
   //statement
   expressionStatement,
   variableDeclaration,
-  blockStatement
+  blockStatement,
+  ifStatement,
+  forStatement,
+  whileStatement
 
   = Value
 }

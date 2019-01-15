@@ -15,28 +15,51 @@ case class ExpressionStatement(expression: Expression) extends Statement {
 
   override def getChildren: List[Expression] = List(expression)
 }
-case class BlockStatement(openBraceToken:Tokens,
-                          statements:List[Statement],
-                          closeBraceToken:Tokens) extends Statement{
+
+case class BlockStatement(openBraceToken: Tokens,
+                          statements: List[Statement],
+                          closeBraceToken: Tokens) extends Statement {
   override def getKind: TokenType = TokenType.blockStatement
 
   override def getChildren: List[Ast] = statements
 }
 
+case class IfStatement(ifToken: Tokens,
+                       openParentheses: Tokens,
+                       condition: Expression,
+                       closeParentheses: Tokens,
+                       expr1: Statement,
+                       elseToken: Tokens,
+                       expr2: Statement
+                      ) extends Statement {
+  override def getKind: TokenType = TokenType.ifStatement
+
+  override def getChildren: List[Ast] =
+    List(
+      ifToken,
+      openParentheses,
+      condition,
+      closeParentheses,
+      expr1,
+      elseToken,
+      expr2
+    )
+}
+
 case class SyntaxTree(diagnostics: DiagnosticsBag,
                       root: CompilationUnit)
 
-object SyntaxTree{
+object SyntaxTree {
   def parse(text: String): SyntaxTree = {
     val parser = new Parser(Lexer.newLexer(text))
     parser.init()
     val expr = parser.parseCompilationUnit()
-    SyntaxTree(parser.diagnostics,CompilationUnit(expr,TokenType.eof))
+    SyntaxTree(parser.diagnostics, CompilationUnit(expr, TokenType.eof))
   }
 }
 
 case class CompilationUnit(statement: Statement,
-                           eof:TokenType) extends Statement {
+                           eof: TokenType) extends Statement {
   override def getKind: TokenType.TokenType = TokenType.compilationUnit
 
   override def getChildren: List[Ast] = List[Ast](statement)
@@ -94,11 +117,11 @@ case class AssignmentNode(identifierToken: Tokens,
   override def getChildren: List[Expression] = List(identifierToken, equalsToken, expression)
 }
 
-case class VariableDeclarationNode(keyword:Tokens,
-                                   identifier:Tokens,
-                                   equalsToken:Tokens,
-                                   expression: Expression) extends Statement  {
+case class VariableDeclarationNode(keyword: Tokens,
+                                   identifier: Tokens,
+                                   equalsToken: Tokens,
+                                   expression: Expression) extends Statement {
   override def getKind: TokenType = TokenType.variableDeclaration
 
-  override def getChildren: List[Ast] = List(keyword,identifier,equalsToken,expression)
+  override def getChildren: List[Ast] = List(keyword, identifier, equalsToken, expression)
 }
