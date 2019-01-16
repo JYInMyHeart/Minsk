@@ -17,14 +17,27 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, AnyVal]) {
         evalExpressionStatement(s)
       case (BindType.variableDeclaration, s: BindVariableStatement) =>
         evalVariableStatement(s)
+      case (BindType.ifStatement, s: BindIfStatement) =>
+        evalIfStatement(s)
       case _ =>
         throw new Exception(s"Unexpected statement ${statement.bindTypeClass}")
     }
   }
 
-  def evalVariableStatement(s: BindVariableStatement): Unit = {
-    val value = evalExpression(s.initializer)
-    variables(s.variableSymbol) = value
+  def evalIfStatement(statement: BindIfStatement): Unit = {
+    val value = evalExpression(statement.condition)
+    value match {
+      case true => evalStatement(statement.expr1)
+      case false =>
+        if (statement.expr2 != null)
+          evalStatement(statement.expr2)
+      case _ => throw new Exception("ifStatement condition type error.")
+    }
+  }
+
+  def evalVariableStatement(statement: BindVariableStatement): Unit = {
+    val value = evalExpression(statement.initializer)
+    variables(statement.variableSymbol) = value
     lastValue = value
   }
 

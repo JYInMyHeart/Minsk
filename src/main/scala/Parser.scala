@@ -83,13 +83,17 @@ class Parser(val lexer: Lexer) {
 
   def parseIfStatement(): IfStatement = {
     val ifKeyword = eat(TokenType.ifKeyword)
-    val openParentheses = eat(TokenType.lb)
+    eat(TokenType.lb)
     val condition = parseExpression()
-    val closeParentheses = eat(TokenType.rb)
+    eat(TokenType.rb)
     val expr1 = parseStatement()
-    val elseKeyword = eat(TokenType.elseKeyword)
-    val expr2 = parseStatement()
-    IfStatement(ifKeyword,openParentheses,condition,closeParentheses,expr1,elseKeyword,expr2)
+    var elseKeyword: Tokens = null
+    var expr2: Statement = null
+    if (current.tokenType == TokenType.elseKeyword) {
+      elseKeyword = eat(TokenType.elseKeyword)
+      expr2 = parseStatement()
+    }
+    IfStatement(ifKeyword, condition, expr1, elseKeyword, expr2)
   }
 
   def parseStatement(): Statement = {

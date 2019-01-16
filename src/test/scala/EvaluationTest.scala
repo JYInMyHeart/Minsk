@@ -31,7 +31,11 @@ class EvaluationTest extends UnitSpec {
     ("b", 100),
     ("{a}", 100),
     ("{a + b}", 200),
-    ("{var a = 3 {a = 6} a}", 6)
+    ("{var a = 3 {a = 6} a}", 6),
+    ("{if(2 > 3) true else false}", false),
+    ("{if(2 > 3) true else false}", false),
+    ("{if(2 > 3) if(3 > 2) 7 else false else true}", true),
+    ("{if(2 < 3) if(3 > 2) 7  else true}", 7)
   )
   val variables: mutable.HashMap[VariableSymbol, AnyVal] = mutable.HashMap[VariableSymbol, AnyVal]()
   var previous: Compilation = _

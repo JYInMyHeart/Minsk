@@ -109,7 +109,8 @@ object BindType extends Enumeration {
   //statement
   blockStatement,
   expressionStatement,
-  variableDeclaration
+  variableDeclaration,
+  ifStatement
   = Value
 }
 

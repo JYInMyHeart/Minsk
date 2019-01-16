@@ -25,9 +25,7 @@ case class BlockStatement(openBraceToken: Tokens,
 }
 
 case class IfStatement(ifToken: Tokens,
-                       openParentheses: Tokens,
                        condition: Expression,
-                       closeParentheses: Tokens,
                        expr1: Statement,
                        elseToken: Tokens,
                        expr2: Statement
@@ -37,9 +35,7 @@ case class IfStatement(ifToken: Tokens,
   override def getChildren: List[Ast] =
     List(
       ifToken,
-      openParentheses,
       condition,
-      closeParentheses,
       expr1,
       elseToken,
       expr2

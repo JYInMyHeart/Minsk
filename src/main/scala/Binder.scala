@@ -18,9 +18,18 @@ case class Binder(parent: BoundScope) {
         bindStatement(s.statement)
       case (TokenType.variableDeclaration, s: VariableDeclarationNode) =>
         bindVariableDeclaration(s)
+      case (TokenType.ifStatement, s: IfStatement) =>
+        bindIfStatement(s)
       case _ =>
         throw new LexerException(s"unexpected syntax ${statement.getKind}")
     }
+  }
+
+  def bindExpression(expression: Expression,targetType:String): BindExpression = {
+    val res = bindExpression(expression)
+    if(res.bindTypeClass != targetType)
+      diagnostics.reportCannotConvert(null,res.bindTypeClass,targetType)
+    res
   }
 
   def bindExpression(tree: Expression): BindExpression = {
@@ -40,6 +49,14 @@ case class Binder(parent: BoundScope) {
       case _ =>
         throw new LexerException(s"unexpected syntax ${tree.getKind}")
     }
+  }
+
+  private def bindIfStatement(statement: IfStatement): BindIfStatement = {
+    val condition = bindExpression(statement.condition,bool)
+    val thenStatement = bindStatement(statement.expr1)
+    val elseStatement = if(statement.expr2 == null) null else bindStatement(statement.expr2)
+    BindIfStatement(condition,thenStatement,elseStatement)
+
   }
 
   private def bindVariableDeclaration(statement: VariableDeclarationNode): BindVariableStatement = {
@@ -83,11 +100,11 @@ case class Binder(parent: BoundScope) {
     val boundExpression = bindExpression(node.expression)
     var existingVariable = scope.tryLookup(name)
     if (existingVariable == null) {
-      diagnostics.reportUndefinedName(node.identifierToken.span,name)
+      diagnostics.reportUndefinedName(node.identifierToken.span, name)
       return boundExpression
     }
-    if(existingVariable.isReadOnly)
-      diagnostics.reportCannotAssign(node.equalsToken.span,name)
+    if (existingVariable.isReadOnly)
+      diagnostics.reportCannotAssign(node.equalsToken.span, name)
 
     if (boundExpression.bindTypeClass != existingVariable.varType) {
       diagnostics.reportCannotConvert(node.equalsToken.span, boundExpression.bindTypeClass, existingVariable.varType)
@@ -229,6 +246,14 @@ case class BindVariableStatement(variableSymbol: VariableSymbol,
   override def bindTypeClass: String = variableSymbol.varType
 
   override def getKind: BindType = BindType.variableDeclaration
+}
+
+case class BindIfStatement(condition: BindExpression,
+                           expr1: BindStatement,
+                           expr2: BindStatement) extends BindStatement {
+  override def getKind: BindType = BindType.ifStatement
+
+  override def bindTypeClass: String = ???
 }
 
 case class BindVariableExpression(variableSymbol: VariableSymbol) extends BindExpression {
