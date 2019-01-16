@@ -20,6 +20,8 @@ case class Binder(parent: BoundScope) {
         bindVariableDeclaration(s)
       case (TokenType.ifStatement, s: IfStatement) =>
         bindIfStatement(s)
+      case (TokenType.whileStatement,s:WhileStatement) =>
+        bindWhileStatement(s)
       case _ =>
         throw new LexerException(s"unexpected syntax ${statement.getKind}")
     }
@@ -49,6 +51,12 @@ case class Binder(parent: BoundScope) {
       case _ =>
         throw new LexerException(s"unexpected syntax ${tree.getKind}")
     }
+  }
+
+  private def bindWhileStatement(statement: WhileStatement):BindWhileStatement = {
+    val condition = bindExpression(statement.condition,bool)
+    val body = bindStatement(statement.body)
+    BindWhileStatement(condition,body)
   }
 
   private def bindIfStatement(statement: IfStatement): BindIfStatement = {
@@ -98,7 +106,7 @@ case class Binder(parent: BoundScope) {
   private def bindAssignmentExpression(node: AssignmentNode): BindExpression = {
     val name = node.identifierToken.value
     val boundExpression = bindExpression(node.expression)
-    var existingVariable = scope.tryLookup(name)
+    val existingVariable = scope.tryLookup(name)
     if (existingVariable == null) {
       diagnostics.reportUndefinedName(node.identifierToken.span, name)
       return boundExpression
@@ -219,6 +227,28 @@ case class BindBlockStatement(bindStatements: List[BindStatement]) extends BindS
   override def getKind: BindType.BindType = BindType.blockStatement
 }
 
+case class BindVariableStatement(variableSymbol: VariableSymbol,
+                                 initializer: BindExpression) extends BindStatement {
+  override def bindTypeClass: String = variableSymbol.varType
+
+  override def getKind: BindType = BindType.variableDeclaration
+}
+
+case class BindIfStatement(condition: BindExpression,
+                           expr1: BindStatement,
+                           expr2: BindStatement) extends BindStatement {
+  override def getKind: BindType = BindType.ifStatement
+
+  override def bindTypeClass: String = expr1.bindTypeClass
+}
+
+case class BindWhileStatement(condition:BindExpression,
+                              body:BindStatement) extends BindStatement{
+  override def getKind: BindType = BindType.whileStatement
+
+  override def bindTypeClass: String = body.bindTypeClass
+}
+
 
 case class BindBinaryExpression(bindType: BoundBinaryOperator,
                                 boundLeft: BindExpression,
@@ -241,20 +271,7 @@ sealed class BoundBinaryOperator(val tokenType: TokenType,
                                  val right: String,
                                  val result: String)
 
-case class BindVariableStatement(variableSymbol: VariableSymbol,
-                                 initializer: BindExpression) extends BindStatement {
-  override def bindTypeClass: String = variableSymbol.varType
 
-  override def getKind: BindType = BindType.variableDeclaration
-}
-
-case class BindIfStatement(condition: BindExpression,
-                           expr1: BindStatement,
-                           expr2: BindStatement) extends BindStatement {
-  override def getKind: BindType = BindType.ifStatement
-
-  override def bindTypeClass: String = ???
-}
 
 case class BindVariableExpression(variableSymbol: VariableSymbol) extends BindExpression {
   override def bindTypeClass: String = variableSymbol.varType

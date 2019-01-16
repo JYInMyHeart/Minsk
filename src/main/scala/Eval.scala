@@ -19,9 +19,16 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, AnyVal]) {
         evalVariableStatement(s)
       case (BindType.ifStatement, s: BindIfStatement) =>
         evalIfStatement(s)
+      case (BindType.whileStatement,s:BindWhileStatement) =>
+        evalWhileStatement(s)
       case _ =>
         throw new Exception(s"Unexpected statement ${statement.bindTypeClass}")
     }
+  }
+
+  def evalWhileStatement(statement:BindWhileStatement):Unit = {
+    while(evalExpression(statement.condition).asInstanceOf[Boolean])
+      evalStatement(statement.body)
   }
 
   def evalIfStatement(statement: BindIfStatement): Unit = {
@@ -31,7 +38,6 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, AnyVal]) {
       case false =>
         if (statement.expr2 != null)
           evalStatement(statement.expr2)
-      case _ => throw new Exception("ifStatement condition type error.")
     }
   }
 

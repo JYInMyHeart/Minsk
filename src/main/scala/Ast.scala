@@ -42,6 +42,25 @@ case class IfStatement(ifToken: Tokens,
     )
 }
 
+case class ForStatement(forToken: Tokens,
+                        varToken: Tokens,
+                        identifier: Tokens,
+                        inToken: Tokens,
+                        expression: Expression)
+
+case class WhileStatement(whileToken: Tokens,
+                          condition: Expression,
+                          body: Statement) extends Statement {
+  override def getKind: TokenType = TokenType.whileStatement
+
+  override def getChildren: List[Ast] =
+    List(
+      whileToken,
+      condition,
+      body
+    )
+}
+
 case class SyntaxTree(diagnostics: DiagnosticsBag,
                       root: CompilationUnit)
 

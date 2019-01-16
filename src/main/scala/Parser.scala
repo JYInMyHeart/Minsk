@@ -81,6 +81,15 @@ class Parser(val lexer: Lexer) {
     VariableDeclarationNode(keyword, id, eq, initializer)
   }
 
+  def parseWhileStatement():WhileStatement = {
+    val whileKeyword = eat(TokenType.whileKeyword)
+    eat(TokenType.lb)
+    val condition = parseExpression()
+    eat(TokenType.rb)
+    val body = parseStatement()
+    WhileStatement(whileKeyword,condition,body)
+  }
+
   def parseIfStatement(): IfStatement = {
     val ifKeyword = eat(TokenType.ifKeyword)
     eat(TokenType.lb)
@@ -105,6 +114,8 @@ class Parser(val lexer: Lexer) {
         parseVariableDeclaration()
       case TokenType.ifKeyword =>
         parseIfStatement()
+      case TokenType.whileKeyword =>
+        parseWhileStatement()
       case _ =>
         parseExpressionStatement()
     }
