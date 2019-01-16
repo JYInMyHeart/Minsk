@@ -20,17 +20,19 @@ case class Binder(parent: BoundScope) {
         bindVariableDeclaration(s)
       case (TokenType.ifStatement, s: IfStatement) =>
         bindIfStatement(s)
-      case (TokenType.whileStatement,s:WhileStatement) =>
+      case (TokenType.whileStatement, s: WhileStatement) =>
         bindWhileStatement(s)
+      case (TokenType.forStatement, s: ForStatement) =>
+        bindForStatement(s)
       case _ =>
         throw new LexerException(s"unexpected syntax ${statement.getKind}")
     }
   }
 
-  def bindExpression(expression: Expression,targetType:String): BindExpression = {
+  def bindExpression(expression: Expression, targetType: String): BindExpression = {
     val res = bindExpression(expression)
-    if(res.bindTypeClass != targetType)
-      diagnostics.reportCannotConvert(null,res.bindTypeClass,targetType)
+    if (res.bindTypeClass != targetType)
+      diagnostics.reportCannotConvert(null, res.bindTypeClass, targetType)
     res
   }
 
@@ -53,17 +55,26 @@ case class Binder(parent: BoundScope) {
     }
   }
 
-  private def bindWhileStatement(statement: WhileStatement):BindWhileStatement = {
-    val condition = bindExpression(statement.condition,bool)
+  private def bindForStatement(statement: ForStatement): BindForStatement = {
+    val low = bindExpression(statement.low)
+    val variableSymbol = VariableSymbol(statement.identifier.value, low.bindTypeClass, isReadOnly = false)
+    scope.tryDeclare(variableSymbol)
+    val upper = bindExpression(statement.upper)
     val body = bindStatement(statement.body)
-    BindWhileStatement(condition,body)
+    BindForStatement(variableSymbol, low, upper, body)
+  }
+
+  private def bindWhileStatement(statement: WhileStatement): BindWhileStatement = {
+    val condition = bindExpression(statement.condition, bool)
+    val body = bindStatement(statement.body)
+    BindWhileStatement(condition, body)
   }
 
   private def bindIfStatement(statement: IfStatement): BindIfStatement = {
-    val condition = bindExpression(statement.condition,bool)
+    val condition = bindExpression(statement.condition, bool)
     val thenStatement = bindStatement(statement.expr1)
-    val elseStatement = if(statement.expr2 == null) null else bindStatement(statement.expr2)
-    BindIfStatement(condition,thenStatement,elseStatement)
+    val elseStatement = if (statement.expr2 == null) null else bindStatement(statement.expr2)
+    BindIfStatement(condition, thenStatement, elseStatement)
 
   }
 
@@ -95,6 +106,8 @@ case class Binder(parent: BoundScope) {
 
   private def bindNameExpression(node: NameNode): BindExpression = {
     val name = node.identifierToken.value
+    if (name == null || name.isEmpty)
+      return BindLiteralExpression(0)
     val variable = scope.tryLookup(name)
     if (variable == null) {
       diagnostics.reportUndefinedName(node.identifierToken.span, name)
@@ -242,9 +255,18 @@ case class BindIfStatement(condition: BindExpression,
   override def bindTypeClass: String = expr1.bindTypeClass
 }
 
-case class BindWhileStatement(condition:BindExpression,
-                              body:BindStatement) extends BindStatement{
+case class BindWhileStatement(condition: BindExpression,
+                              body: BindStatement) extends BindStatement {
   override def getKind: BindType = BindType.whileStatement
+
+  override def bindTypeClass: String = body.bindTypeClass
+}
+
+case class BindForStatement(variable: VariableSymbol,
+                            initializer: BindExpression,
+                            upper: BindExpression,
+                            body: BindStatement) extends BindStatement {
+  override def getKind: BindType = BindType.forStatement
 
   override def bindTypeClass: String = body.bindTypeClass
 }
@@ -270,7 +292,6 @@ sealed class BoundBinaryOperator(val tokenType: TokenType,
                                  val left: String,
                                  val right: String,
                                  val result: String)
-
 
 
 case class BindVariableExpression(variableSymbol: VariableSymbol) extends BindExpression {

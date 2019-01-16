@@ -36,7 +36,8 @@ class EvaluationTest extends UnitSpec {
     ("{if(2 > 3) true else false}", false),
     ("{if(2 > 3) if(3 > 2) 7 else false else true}", true),
     ("{if(2 < 3) if(3 > 2) 7  else true}", 7),
-    ("{var a = 5  var b = 0 while(a > 0) {b = b + a a = a - 1} b }", 15)
+    ("{var a = 5  var b = 0 while(a > 0) {b = b + a a = a - 1} b }", 15),
+    ("{var res = 0 for i = 1 to 10 {res = res + i}res}", 55)
   )
   val variables: mutable.HashMap[VariableSymbol, AnyVal] = mutable.HashMap[VariableSymbol, AnyVal]()
   var previous: Compilation = _

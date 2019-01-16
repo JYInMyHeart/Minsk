@@ -17,7 +17,8 @@ class LexerTest extends UnitSpec {
     (TokenType.forKeyword, "for"),
     (TokenType.whileKeyword, "while"),
     (TokenType.varKeyword, "var"),
-    (TokenType.letKeyword, "let")
+    (TokenType.letKeyword, "let"),
+    (TokenType.toKeyword, "to")
   )
 
   val fixedTokens: List[(TokenType.Value, String)] =

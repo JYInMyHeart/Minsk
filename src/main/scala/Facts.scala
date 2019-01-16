@@ -36,6 +36,7 @@ object Facts {
       case TokenType.elseKeyword => "else"
       case TokenType.forKeyword => "for"
       case TokenType.whileKeyword => "while"
+      case TokenType.toKeyword => "to"
       case _ => null
     }
   }

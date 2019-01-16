@@ -63,6 +63,7 @@ object TokenType extends Enumeration {
   forKeyword,
   whileKeyword,
   elseKeyword,
+  toKeyword,
 
 
   //expressions

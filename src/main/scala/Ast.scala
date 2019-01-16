@@ -43,10 +43,25 @@ case class IfStatement(ifToken: Tokens,
 }
 
 case class ForStatement(forToken: Tokens,
-                        varToken: Tokens,
                         identifier: Tokens,
-                        inToken: Tokens,
-                        expression: Expression)
+                        equalToken: Tokens,
+                        low: Expression,
+                        toToken: Tokens,
+                        upper: Expression,
+                        body: Statement) extends Statement {
+  override def getKind: TokenType = TokenType.forStatement
+
+  override def getChildren: List[Ast] =
+    List(
+      forToken,
+      identifier,
+      equalToken,
+      low,
+      toToken,
+      upper,
+      body
+    )
+}
 
 case class WhileStatement(whileToken: Tokens,
                           condition: Expression,

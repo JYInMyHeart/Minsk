@@ -21,8 +21,19 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, AnyVal]) {
         evalIfStatement(s)
       case (BindType.whileStatement,s:BindWhileStatement) =>
         evalWhileStatement(s)
+      case (BindType.forStatement,s:BindForStatement) =>
+        evalForStatement(s)
       case _ =>
         throw new Exception(s"Unexpected statement ${statement.bindTypeClass}")
+    }
+  }
+
+  def evalForStatement(statement:BindForStatement):Unit = {
+    val start = evalExpression(statement.initializer)
+    val end = evalExpression(statement.upper)
+    for(i <- start.asInstanceOf[Double].toInt to end.asInstanceOf[Double].toInt){
+      variables(statement.variable) = i.toDouble
+      evalStatement(statement.body)
     }
   }
 

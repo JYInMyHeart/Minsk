@@ -34,6 +34,7 @@ class Lexer(val pushBackInputStream: PushbackInputStream) {
       case "else" => elseKeyword
       case "while" => whileKeyword
       case "for" => forKeyword
+      case "to" => toKeyword
       case _ => identifier
     }
   }
