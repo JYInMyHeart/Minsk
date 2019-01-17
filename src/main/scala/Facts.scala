@@ -37,6 +37,7 @@ object Facts {
       case TokenType.forKeyword => "for"
       case TokenType.whileKeyword => "while"
       case TokenType.toKeyword => "to"
+      case TokenType.funcKeyword => "def"
       case _ => null
     }
   }

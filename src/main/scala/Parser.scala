@@ -116,6 +116,16 @@ class Parser(val lexer: Lexer) {
     ForStatement(forKeyword,id,eq,initializer,to,upper,body)
   }
 
+  def parseFuncStatement():FuncStatement = {
+    val func = eat(funcKeyword)
+    val id = eat(identifier)
+    eat(lb)
+    val param = eat(identifier)
+    eat(rb)
+    val body = parseStatement()
+    FuncStatement(func,id,param,body)
+  }
+
   def parseStatement(): Statement = {
     current.tokenType match {
       case TokenType.openBraceToken =>
@@ -129,6 +139,8 @@ class Parser(val lexer: Lexer) {
         parseWhileStatement()
       case TokenType.forKeyword =>
         parseForStatement()
+      case TokenType.funcKeyword =>
+        parseFuncStatement()
       case _ =>
         parseExpressionStatement()
     }

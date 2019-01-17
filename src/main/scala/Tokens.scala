@@ -64,6 +64,7 @@ object TokenType extends Enumeration {
   whileKeyword,
   elseKeyword,
   toKeyword,
+  funcKeyword,
 
 
   //expressions
@@ -82,7 +83,8 @@ object TokenType extends Enumeration {
   blockStatement,
   ifStatement,
   forStatement,
-  whileStatement
+  whileStatement,
+  funcStatement
 
   = Value
 }
@@ -113,7 +115,8 @@ object BindType extends Enumeration {
   variableDeclaration,
   ifStatement,
   whileStatement,
-  forStatement
+  forStatement,
+  funcStatement
   = Value
 }
 

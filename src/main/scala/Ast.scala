@@ -24,6 +24,20 @@ case class BlockStatement(openBraceToken: Tokens,
   override def getChildren: List[Ast] = statements
 }
 
+case class FuncStatement(funcToken: Tokens,
+                         identifier: Tokens,
+                         param: Tokens,
+                         body: Statement) extends Statement {
+  override def getKind: TokenType = TokenType.funcStatement
+
+  override def getChildren: List[Ast] =
+    List(
+      funcToken,
+      identifier,
+      param, body
+    )
+}
+
 case class IfStatement(ifToken: Tokens,
                        condition: Expression,
                        expr1: Statement,

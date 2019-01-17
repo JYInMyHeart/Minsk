@@ -24,6 +24,8 @@ case class Binder(parent: BoundScope) {
         bindWhileStatement(s)
       case (TokenType.forStatement, s: ForStatement) =>
         bindForStatement(s)
+      case (TokenType.funcStatement,s:FuncStatement) =>
+        bindFuncStatement(s)
       case _ =>
         throw new LexerException(s"unexpected syntax ${statement.getKind}")
     }
@@ -53,6 +55,10 @@ case class Binder(parent: BoundScope) {
       case _ =>
         throw new LexerException(s"unexpected syntax ${tree.getKind}")
     }
+  }
+
+  private def bindFuncStatement(statement: FuncStatement):BindFuncStatement = {
+
   }
 
   private def bindForStatement(statement: ForStatement): BindForStatement = {
@@ -267,6 +273,15 @@ case class BindForStatement(variable: VariableSymbol,
                             upper: BindExpression,
                             body: BindStatement) extends BindStatement {
   override def getKind: BindType = BindType.forStatement
+
+  override def bindTypeClass: String = body.bindTypeClass
+}
+
+
+case class BindFuncStatement(identifier:VariableSymbol,
+                             param:VariableSymbol,
+                             body:BindStatement) extends BindStatement{
+  override def getKind: BindType = BindType.funcStatement
 
   override def bindTypeClass: String = body.bindTypeClass
 }
