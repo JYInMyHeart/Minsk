@@ -24,7 +24,7 @@ case class Binder(parent: BoundScope) {
         bindWhileStatement(s)
       case (TokenType.forStatement, s: ForStatement) =>
         bindForStatement(s)
-      case (TokenType.funcStatement, s: FuncStatement) =>
+      case (TokenType.funcStatement,s:FuncStatement) =>
         bindFuncStatement(s)
       case _ =>
         throw new LexerException(s"unexpected syntax ${statement.getKind}")
@@ -57,12 +57,8 @@ case class Binder(parent: BoundScope) {
     }
   }
 
-  private def bindFuncStatement(statement: FuncStatement): BindFuncStatement = {
-    val funcName = VariableSymbol(statement.identifier.value, "Function", isReadOnly = true)
-    val params = statement.parameters.map(x => VariableSymbol(x.id.value,x.paramType.value,isReadOnly = false))
-    val returnSymbol = VariableSymbol(statement.returnType.id.value,statement.returnType.paramType.value,isReadOnly = true)
-    val body = bindStatement(statement.body)
-    BindFuncStatement(FunctionSymbol(funcName,params,returnSymbol,body))
+  private def bindFuncStatement(statement: FuncStatement):BindFuncStatement = {
+
   }
 
   private def bindForStatement(statement: ForStatement): BindForStatement = {
@@ -282,10 +278,12 @@ case class BindForStatement(variable: VariableSymbol,
 }
 
 
-case class BindFuncStatement(func:FunctionSymbol) extends BindStatement {
+case class BindFuncStatement(identifier:VariableSymbol,
+                             param:VariableSymbol,
+                             body:BindStatement) extends BindStatement{
   override def getKind: BindType = BindType.funcStatement
 
-  override def bindTypeClass: String = func.returnSymbol.varType
+  override def bindTypeClass: String = body.bindTypeClass
 }
 
 
