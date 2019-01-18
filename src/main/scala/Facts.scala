@@ -24,6 +24,7 @@ object Facts {
       case TokenType.not => "!"
       case TokenType.pow => "^"
       case TokenType.eof => "\0"
+      case TokenType.annotationToken => ":"
       case TokenType.openBraceToken => "{"
       case TokenType.closeBraceToken => "}"
       case TokenType.openBraceToken => "{"
@@ -38,6 +39,7 @@ object Facts {
       case TokenType.whileKeyword => "while"
       case TokenType.toKeyword => "to"
       case TokenType.funcKeyword => "def"
+      case TokenType.returnKeyword => "return"
       case _ => null
     }
   }

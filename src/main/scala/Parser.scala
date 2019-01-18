@@ -116,14 +116,28 @@ class Parser(val lexer: Lexer) {
     ForStatement(forKeyword,id,eq,initializer,to,upper,body)
   }
 
+  def parseParamStatement():ParamStatement = {
+    val paramName = eat(identifier)
+    eat(annotationToken)
+    val paramType = eat(TokenType.typeToken)
+    ParamStatement(paramName,paramType)
+  }
+
   def parseFuncStatement():FuncStatement = {
     val func = eat(funcKeyword)
     val id = eat(identifier)
     eat(lb)
-    val param = eat(identifier)
+    var parameters:List[ParamStatement] = List()
+    while(current.tokenType != rb){
+      parameters :+= parseParamStatement()
+    }
     eat(rb)
+    eat(annotationToken)
+    val paramType = eat(TokenType.typeToken)
+    val returnType = ParamStatement(Tokens(returnKeyword,"return",current.span),paramType)
+    eat(assign)
     val body = parseStatement()
-    FuncStatement(func,id,param,body)
+    FuncStatement(func,id,parameters,returnType,body)
   }
 
   def parseStatement(): Statement = {

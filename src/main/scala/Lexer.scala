@@ -36,6 +36,8 @@ class Lexer(val pushBackInputStream: PushbackInputStream) {
       case "for" => forKeyword
       case "to" => toKeyword
       case "def" => funcKeyword
+      case "return" => returnKeyword
+      case "Int" => typeToken
       case _ => identifier
     }
   }
@@ -119,6 +121,8 @@ class Lexer(val pushBackInputStream: PushbackInputStream) {
             unRead(ch)
             Tokens(assign, "=", Span(lineCount, columnCount))
         }
+      case ':' =>
+        Tokens(annotationToken,":",Span(lineCount, columnCount))
       case '\0' =>
         Tokens(eof, "EOF", Span(lineCount, columnCount))
       case _ =>

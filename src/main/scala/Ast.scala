@@ -26,16 +26,25 @@ case class BlockStatement(openBraceToken: Tokens,
 
 case class FuncStatement(funcToken: Tokens,
                          identifier: Tokens,
-                         param: Tokens,
+                         parameters: List[ParamStatement],
+                         returnType: ParamStatement,
                          body: Statement) extends Statement {
   override def getKind: TokenType = TokenType.funcStatement
 
   override def getChildren: List[Ast] =
     List(
       funcToken,
-      identifier,
-      param, body
-    )
+      identifier
+    ) ++ parameters :+ returnType :+ body
+}
+
+case class ParamStatement(id: Tokens,
+                          paramType: Tokens) extends Statement {
+  override def getKind: TokenType = TokenType.paramStatement
+
+  override def getChildren: List[Ast] = List(
+    id, paramType
+  )
 }
 
 case class IfStatement(ifToken: Tokens,

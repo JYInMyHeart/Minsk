@@ -53,6 +53,8 @@ object TokenType extends Enumeration {
   wrong,
   openBraceToken,
   closeBraceToken,
+  annotationToken,
+  typeToken,
 
   //keyword
   falseKeyword,
@@ -65,6 +67,7 @@ object TokenType extends Enumeration {
   elseKeyword,
   toKeyword,
   funcKeyword,
+  returnKeyword,
 
 
   //expressions
@@ -84,7 +87,8 @@ object TokenType extends Enumeration {
   ifStatement,
   forStatement,
   whileStatement,
-  funcStatement
+  funcStatement,
+  paramStatement
 
   = Value
 }

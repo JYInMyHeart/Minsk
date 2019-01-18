@@ -4,3 +4,8 @@ case class VariableSymbol(name: String,
 
 }
 
+case class FunctionSymbol(name:VariableSymbol,
+                          parameters:List[VariableSymbol],
+                          returnSymbol:VariableSymbol,
+                          body:BindStatement)
+
