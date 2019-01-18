@@ -58,7 +58,7 @@ case class Binder(parent: BoundScope) {
   }
 
   private def bindFuncStatement(statement: FuncStatement):BindFuncStatement = {
-
+    null
   }
 
   private def bindForStatement(statement: ForStatement): BindForStatement = {
