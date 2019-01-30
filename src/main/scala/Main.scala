@@ -12,14 +12,14 @@ object Main {
       val str = StdIn.readLine()
       str match {
         case "q" => System.exit(0)
-        case "show" => showTree = !showTree
+        case "show" =>
+          showTree = !showTree
           if (showTree)
             println("show ast!")
           else
             println("not show ast!")
         case "h" =>
-          println(
-            """h:help
+          println("""h:help
               |q:exit
               |show:show ast?
             """.stripMargin)
@@ -32,10 +32,11 @@ object Main {
               x => colorPrintln(scala.io.AnsiColor.RED, x.toString)
             )
           } else {
-            val compilation = if (previous == null)
-              Compilation(tree, previous)
-            else
-              previous.continueWith(tree)
+            val compilation =
+              if (previous == null)
+                Compilation(tree, previous)
+              else
+                previous.continueWith(tree)
             val result = compilation.evaluate(variables)
             if (!result.diagnosticsBag.isEmpty) {
               result.diagnosticsBag.reports.foreach(

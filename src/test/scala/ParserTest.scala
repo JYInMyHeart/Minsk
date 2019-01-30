@@ -13,15 +13,16 @@ class ParserTest extends UnitSpec {
       yield (o1, o2)
   }
 
-
-  def parseBinaryExpressionHonorsPrecedences(op1: TokenType.TokenType, op2: TokenType.TokenType): Unit = {
+  def parseBinaryExpressionHonorsPrecedences(op1: TokenType.TokenType,
+                                             op2: TokenType.TokenType): Unit = {
     val op1Precedence = getBinaryOperatorPrecedence(op1)
     val op2Precedence = getBinaryOperatorPrecedence(op2)
     val op1Text = getText(op1)
     val op2Text = getText(op2)
     val expression = SyntaxTree.parse(s"a $op1Text b $op2Text c")
     if (op1Precedence >= op2Precedence) {
-      val e = AssertingEnumerator(AssertingEnumerator.flatten(expression.root).iterator)
+      val e = AssertingEnumerator(
+        AssertingEnumerator.flatten(expression.root).iterator)
       e.assertNode(TokenType.compilationUnit)
       e.assertNode(TokenType.compilationUnit)
       e.assertNode(TokenType.expressionStatement)
@@ -36,7 +37,8 @@ class ParserTest extends UnitSpec {
       e.assertNode(TokenType.nameExpression)
       e.assertToken(TokenType.identifier, "c")
     } else {
-      val e = AssertingEnumerator(AssertingEnumerator.flatten(expression.root).iterator)
+      val e = AssertingEnumerator(
+        AssertingEnumerator.flatten(expression.root).iterator)
       e.assertNode(TokenType.compilationUnit)
       e.assertNode(TokenType.compilationUnit)
       e.assertNode(TokenType.expressionStatement)
@@ -53,14 +55,16 @@ class ParserTest extends UnitSpec {
     }
   }
 
-  def parseUnaryExpressionHonorsPrecedences(un: TokenType.TokenType, bin: TokenType.TokenType): Unit = {
+  def parseUnaryExpressionHonorsPrecedences(un: TokenType.TokenType,
+                                            bin: TokenType.TokenType): Unit = {
     val unPrecedence = getUnaryOperatorPrecedence(un)
     val binPrecedence = getBinaryOperatorPrecedence(bin)
     val unText = getText(un)
     val binText = getText(bin)
     val expression = SyntaxTree.parse(s"$unText a $binText b ")
     if (unPrecedence >= binPrecedence) {
-      val e = AssertingEnumerator(AssertingEnumerator.flatten(expression.root).iterator)
+      val e = AssertingEnumerator(
+        AssertingEnumerator.flatten(expression.root).iterator)
       e.assertNode(TokenType.compilationUnit)
       e.assertNode(TokenType.compilationUnit)
       e.assertNode(TokenType.expressionStatement)
@@ -73,7 +77,8 @@ class ParserTest extends UnitSpec {
       e.assertNode(TokenType.nameExpression)
       e.assertToken(TokenType.identifier, "b")
     } else {
-      val e = AssertingEnumerator(AssertingEnumerator.flatten(expression.root).iterator)
+      val e = AssertingEnumerator(
+        AssertingEnumerator.flatten(expression.root).iterator)
       e.assertNode(TokenType.compilationUnit)
       e.assertNode(TokenType.compilationUnit)
       e.assertNode(TokenType.expressionStatement)
@@ -99,6 +104,5 @@ class ParserTest extends UnitSpec {
       parseUnaryExpressionHonorsPrecedences(x._1, x._2)
     }
   }
-
 
 }

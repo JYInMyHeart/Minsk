@@ -39,7 +39,8 @@ class EvaluationTest extends UnitSpec {
     ("{var a = 5  var b = 0 while(a > 0) {b = b + a a = a - 1} b }", 15),
     ("{var res = 0 for i = 1 to 10 {res = res + i}res}", 55)
   )
-  val variables: mutable.HashMap[VariableSymbol, AnyVal] = mutable.HashMap[VariableSymbol, AnyVal]()
+  val variables: mutable.HashMap[VariableSymbol, AnyVal] =
+    mutable.HashMap[VariableSymbol, AnyVal]()
   var previous: Compilation = _
   evalData.foreach { x =>
     it should s"${Random.nextInt()}" in {

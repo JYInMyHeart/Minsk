@@ -1,4 +1,3 @@
-
 import java.io.{ByteArrayInputStream, PushbackInputStream}
 
 import TokenType._
@@ -26,19 +25,19 @@ class Lexer(val pushBackInputStream: PushbackInputStream) {
 
   def getKeyWordType(text: String): TokenType.Value = {
     text match {
-      case "false" => falseKeyword
-      case "true" => trueKeyword
-      case "var" => varKeyword
-      case "let" => letKeyword
-      case "if" => ifKeyword
-      case "else" => elseKeyword
-      case "while" => whileKeyword
-      case "for" => forKeyword
-      case "to" => toKeyword
-      case "def" => funcKeyword
+      case "false"  => falseKeyword
+      case "true"   => trueKeyword
+      case "var"    => varKeyword
+      case "let"    => letKeyword
+      case "if"     => ifKeyword
+      case "else"   => elseKeyword
+      case "while"  => whileKeyword
+      case "for"    => forKeyword
+      case "to"     => toKeyword
+      case "def"    => funcKeyword
       case "return" => returnKeyword
-      case "Int" => typeToken
-      case _ => identifier
+      case "Int"    => typeToken
+      case _        => identifier
     }
   }
 
@@ -122,7 +121,7 @@ class Lexer(val pushBackInputStream: PushbackInputStream) {
             Tokens(assign, "=", Span(lineCount, columnCount))
         }
       case ':' =>
-        Tokens(annotationToken,":",Span(lineCount, columnCount))
+        Tokens(annotationToken, ":", Span(lineCount, columnCount))
       case '\0' =>
         Tokens(eof, "EOF", Span(lineCount, columnCount))
       case _ =>
@@ -134,7 +133,6 @@ class Lexer(val pushBackInputStream: PushbackInputStream) {
     }
 
   }
-
 
   def satisfied(c: Char): Boolean = ch == c
 
@@ -183,7 +181,9 @@ class Lexer(val pushBackInputStream: PushbackInputStream) {
 
 object Lexer {
   def newLexer(expr: String): Lexer = {
-    new Lexer(new PushbackInputStream(new ByteArrayInputStream((expr + '\0').getBytes), 5))
+    new Lexer(
+      new PushbackInputStream(new ByteArrayInputStream((expr + '\0').getBytes),
+                              5))
   }
 
   def apply(pushbackInputStream: PushbackInputStream): Lexer = new Lexer(

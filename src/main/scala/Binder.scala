@@ -24,14 +24,15 @@ case class Binder(parent: BoundScope) {
         bindWhileStatement(s)
       case (TokenType.forStatement, s: ForStatement) =>
         bindForStatement(s)
-      case (TokenType.funcStatement,s:FuncStatement) =>
+      case (TokenType.funcStatement, s: FuncStatement) =>
         bindFuncStatement(s)
       case _ =>
         throw new LexerException(s"unexpected syntax ${statement.getKind}")
     }
   }
 
-  def bindExpression(expression: Expression, targetType: String): BindExpression = {
+  def bindExpression(expression: Expression,
+                     targetType: String): BindExpression = {
     val res = bindExpression(expression)
     if (res.bindTypeClass != targetType)
       diagnostics.reportCannotConvert(null, res.bindTypeClass, targetType)
@@ -57,20 +58,23 @@ case class Binder(parent: BoundScope) {
     }
   }
 
-  private def bindFuncStatement(statement: FuncStatement):BindFuncStatement = {
+  private def bindFuncStatement(statement: FuncStatement): BindFuncStatement = {
     null
   }
 
   private def bindForStatement(statement: ForStatement): BindForStatement = {
     val low = bindExpression(statement.low)
-    val variableSymbol = VariableSymbol(statement.identifier.value, low.bindTypeClass, isReadOnly = false)
+    val variableSymbol = VariableSymbol(statement.identifier.value,
+                                        low.bindTypeClass,
+                                        isReadOnly = false)
     scope.tryDeclare(variableSymbol)
     val upper = bindExpression(statement.upper)
     val body = bindStatement(statement.body)
     BindForStatement(variableSymbol, low, upper, body)
   }
 
-  private def bindWhileStatement(statement: WhileStatement): BindWhileStatement = {
+  private def bindWhileStatement(
+      statement: WhileStatement): BindWhileStatement = {
     val condition = bindExpression(statement.condition, bool)
     val body = bindStatement(statement.body)
     BindWhileStatement(condition, body)
@@ -79,12 +83,14 @@ case class Binder(parent: BoundScope) {
   private def bindIfStatement(statement: IfStatement): BindIfStatement = {
     val condition = bindExpression(statement.condition, bool)
     val thenStatement = bindStatement(statement.expr1)
-    val elseStatement = if (statement.expr2 == null) null else bindStatement(statement.expr2)
+    val elseStatement =
+      if (statement.expr2 == null) null else bindStatement(statement.expr2)
     BindIfStatement(condition, thenStatement, elseStatement)
 
   }
 
-  private def bindVariableDeclaration(statement: VariableDeclarationNode): BindVariableStatement = {
+  private def bindVariableDeclaration(
+      statement: VariableDeclarationNode): BindVariableStatement = {
     val name = statement.identifier.value
     val isReadOnly = statement.keyword.tokenType == TokenType.letKeyword
     val initializer = bindExpression(statement.expression)
@@ -94,7 +100,8 @@ case class Binder(parent: BoundScope) {
     BindVariableStatement(variable, initializer)
   }
 
-  private def bindBlockStatement(statement: BlockStatement): BindBlockStatement = {
+  private def bindBlockStatement(
+      statement: BlockStatement): BindBlockStatement = {
     var statements: List[BindStatement] = List()
     scope = BoundScope(scope)
     for (s <- statement.statements) {
@@ -105,7 +112,8 @@ case class Binder(parent: BoundScope) {
     BindBlockStatement(statements)
   }
 
-  private def bindExpressionStatement(statement: ExpressionStatement): BindExpressionStatement = {
+  private def bindExpressionStatement(
+      statement: ExpressionStatement): BindExpressionStatement = {
     val expression = bindExpression(statement.expression)
     BindExpressionStatement(expression)
   }
@@ -134,7 +142,9 @@ case class Binder(parent: BoundScope) {
       diagnostics.reportCannotAssign(node.equalsToken.span, name)
 
     if (boundExpression.bindTypeClass != existingVariable.varType) {
-      diagnostics.reportCannotConvert(node.equalsToken.span, boundExpression.bindTypeClass, existingVariable.varType)
+      diagnostics.reportCannotConvert(node.equalsToken.span,
+                                      boundExpression.bindTypeClass,
+                                      existingVariable.varType)
       return boundExpression
     }
     BindAssignmentExpression(existingVariable, boundExpression)
@@ -142,9 +152,9 @@ case class Binder(parent: BoundScope) {
 
   private def bindLiteralExpression(node: LiteralNode): BindExpression = {
     val value = node.value.value match {
-      case "true" => true
+      case "true"  => true
       case "false" => false
-      case x => x.toDouble
+      case x       => x.toDouble
     }
     BindLiteralExpression(value)
   }
@@ -182,7 +192,6 @@ case class Binder(parent: BoundScope) {
         node.op.asInstanceOf[Tokens].span,
         node.op.asInstanceOf[Tokens].value,
         boundOperand.bindTypeClass
-
       )
       return boundOperand
     }
@@ -222,32 +231,33 @@ object Binder {
   }
 }
 
-
 abstract class BoundNode {
   def bindTypeClass: String
 }
 
 abstract class BindExpression extends BoundNode
 
-
 abstract class BindStatement extends BoundNode {
   def getKind: BindType.BindType
 }
 
-case class BindExpressionStatement(bindExpression: BindExpression) extends BindStatement {
+case class BindExpressionStatement(bindExpression: BindExpression)
+    extends BindStatement {
   override def bindTypeClass: String = bindExpression.bindTypeClass
 
   override def getKind: BindType.BindType = BindType.expressionStatement
 }
 
-case class BindBlockStatement(bindStatements: List[BindStatement]) extends BindStatement {
+case class BindBlockStatement(bindStatements: List[BindStatement])
+    extends BindStatement {
   override def bindTypeClass: String = null
 
   override def getKind: BindType.BindType = BindType.blockStatement
 }
 
 case class BindVariableStatement(variableSymbol: VariableSymbol,
-                                 initializer: BindExpression) extends BindStatement {
+                                 initializer: BindExpression)
+    extends BindStatement {
   override def bindTypeClass: String = variableSymbol.varType
 
   override def getKind: BindType = BindType.variableDeclaration
@@ -255,14 +265,15 @@ case class BindVariableStatement(variableSymbol: VariableSymbol,
 
 case class BindIfStatement(condition: BindExpression,
                            expr1: BindStatement,
-                           expr2: BindStatement) extends BindStatement {
+                           expr2: BindStatement)
+    extends BindStatement {
   override def getKind: BindType = BindType.ifStatement
 
   override def bindTypeClass: String = expr1.bindTypeClass
 }
 
-case class BindWhileStatement(condition: BindExpression,
-                              body: BindStatement) extends BindStatement {
+case class BindWhileStatement(condition: BindExpression, body: BindStatement)
+    extends BindStatement {
   override def getKind: BindType = BindType.whileStatement
 
   override def bindTypeClass: String = body.bindTypeClass
@@ -271,30 +282,32 @@ case class BindWhileStatement(condition: BindExpression,
 case class BindForStatement(variable: VariableSymbol,
                             initializer: BindExpression,
                             upper: BindExpression,
-                            body: BindStatement) extends BindStatement {
+                            body: BindStatement)
+    extends BindStatement {
   override def getKind: BindType = BindType.forStatement
 
   override def bindTypeClass: String = body.bindTypeClass
 }
 
-
-case class BindFuncStatement(identifier:VariableSymbol,
-                             param:VariableSymbol,
-                             body:BindStatement) extends BindStatement{
+case class BindFuncStatement(identifier: VariableSymbol,
+                             param: VariableSymbol,
+                             body: BindStatement)
+    extends BindStatement {
   override def getKind: BindType = BindType.funcStatement
 
   override def bindTypeClass: String = body.bindTypeClass
 }
 
-
 case class BindBinaryExpression(bindType: BoundBinaryOperator,
                                 boundLeft: BindExpression,
-                                boundRight: BindExpression) extends BindExpression {
+                                boundRight: BindExpression)
+    extends BindExpression {
   override def bindTypeClass: String = bindType.result
 }
 
 case class BindUnaryExpression(bindType: BoundUnaryOperator,
-                               boundOperand: BindExpression) extends BindExpression {
+                               boundOperand: BindExpression)
+    extends BindExpression {
   override def bindTypeClass: String = bindType.result
 }
 
@@ -308,26 +321,26 @@ sealed class BoundBinaryOperator(val tokenType: TokenType,
                                  val right: String,
                                  val result: String)
 
-
-case class BindVariableExpression(variableSymbol: VariableSymbol) extends BindExpression {
+case class BindVariableExpression(variableSymbol: VariableSymbol)
+    extends BindExpression {
   override def bindTypeClass: String = variableSymbol.varType
 }
 
 case class BindAssignmentExpression(variable: VariableSymbol,
-                                    expression: BindExpression) extends BindExpression {
+                                    expression: BindExpression)
+    extends BindExpression {
   override def bindTypeClass: String = expression.bindTypeClass
 }
 
 object BoundBinaryOperator {
 
-
   def apply(
-             tokenType: TokenType,
-             bindType: BindType,
-             left: String,
-             right: String,
-             result: String
-           ): BoundBinaryOperator =
+      tokenType: TokenType,
+      bindType: BindType,
+      left: String,
+      right: String,
+      result: String
+  ): BoundBinaryOperator =
     new BoundBinaryOperator(
       tokenType,
       bindType,
@@ -338,26 +351,57 @@ object BoundBinaryOperator {
 
   private[this] def binaryOperators: List[BoundBinaryOperator] =
     List(
-      BoundBinaryOperator(TokenType.add, BindType.addition, double, double, double),
-      BoundBinaryOperator(TokenType.sub, BindType.subtraction, double, double, double),
-      BoundBinaryOperator(TokenType.div, BindType.division, double, double, double),
-      BoundBinaryOperator(TokenType.plus, BindType.multiplication, double, double, double),
+      BoundBinaryOperator(TokenType.add,
+                          BindType.addition,
+                          double,
+                          double,
+                          double),
+      BoundBinaryOperator(TokenType.sub,
+                          BindType.subtraction,
+                          double,
+                          double,
+                          double),
+      BoundBinaryOperator(TokenType.div,
+                          BindType.division,
+                          double,
+                          double,
+                          double),
+      BoundBinaryOperator(TokenType.plus,
+                          BindType.multiplication,
+                          double,
+                          double,
+                          double),
       BoundBinaryOperator(TokenType.pow, BindType.pow, double, double, double),
       BoundBinaryOperator(TokenType.mod, BindType.mod, double, double, double),
       BoundBinaryOperator(TokenType.lt, BindType.lt, double, double, bool),
       BoundBinaryOperator(TokenType.gt, BindType.gt, double, double, bool),
       BoundBinaryOperator(TokenType.lte, BindType.lte, double, double, bool),
       BoundBinaryOperator(TokenType.gte, BindType.gte, double, double, bool),
-      BoundBinaryOperator(TokenType.equal, BindType.equal, double, double, bool),
+      BoundBinaryOperator(TokenType.equal,
+                          BindType.equal,
+                          double,
+                          double,
+                          bool),
       BoundBinaryOperator(TokenType.equal, BindType.equal, bool, bool, bool),
-      BoundBinaryOperator(TokenType.notequal, BindType.notequal, double, double, bool),
-      BoundBinaryOperator(TokenType.notequal, BindType.notequal, bool, bool, bool),
+      BoundBinaryOperator(TokenType.notequal,
+                          BindType.notequal,
+                          double,
+                          double,
+                          bool),
+      BoundBinaryOperator(TokenType.notequal,
+                          BindType.notequal,
+                          bool,
+                          bool,
+                          bool),
       BoundBinaryOperator(TokenType.and, BindType.and, bool, bool, bool),
       BoundBinaryOperator(TokenType.or, BindType.or, bool, bool, bool)
     )
 
-  def bind(tokenType: TokenType, left: String, right: String): BoundBinaryOperator = {
-    val binaryOperator = binaryOperators.filter(x => x.tokenType == tokenType && x.left == left && x.right == right)
+  def bind(tokenType: TokenType,
+           left: String,
+           right: String): BoundBinaryOperator = {
+    val binaryOperator = binaryOperators.filter(x =>
+      x.tokenType == tokenType && x.left == left && x.right == right)
     if (binaryOperator.nonEmpty)
       binaryOperator.last
     else
@@ -372,13 +416,12 @@ sealed class BoundUnaryOperator(val tokenType: TokenType,
 
 object BoundUnaryOperator {
 
-
   def apply(
-             tokenType: TokenType,
-             bindType: BindType,
-             operand: String,
-             result: String
-           ): BoundUnaryOperator = new BoundUnaryOperator(
+      tokenType: TokenType,
+      bindType: BindType,
+      operand: String,
+      result: String
+  ): BoundUnaryOperator = new BoundUnaryOperator(
     tokenType,
     bindType,
     operand,
@@ -395,7 +438,8 @@ object BoundUnaryOperator {
     )
 
   def bind(tokenType: TokenType, operand: String): BoundUnaryOperator = {
-    val unaryOperator = unaryOperators.filter(x => x.tokenType == tokenType && x.operand == operand)
+    val unaryOperator = unaryOperators.filter(x =>
+      x.tokenType == tokenType && x.operand == operand)
     if (unaryOperator.nonEmpty)
       unaryOperator.last
     else
@@ -408,5 +452,3 @@ object TypeMapping {
   val int = "Integer"
   val double = "Double"
 }
-
-

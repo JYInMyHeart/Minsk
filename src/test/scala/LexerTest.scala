@@ -6,7 +6,6 @@ class LexerTest extends UnitSpec {
   val dynamicTokens: List[(TokenType, String)] = List(
     //    (TokenType.keyword,""),
     //      (TokenType.func,""),
-
     (TokenType.identifier, "a_12"),
     (TokenType.literal, "1234"),
     (TokenType.eof, "\0"),
@@ -22,8 +21,7 @@ class LexerTest extends UnitSpec {
   )
 
   val fixedTokens: List[(TokenType.Value, String)] =
-    TokenType
-      .values
+    TokenType.values
       .map(k => (k, Facts.getText(k)))
       .filter(_._2 != null)
       .toList
@@ -49,7 +47,6 @@ class LexerTest extends UnitSpec {
     (TokenType.identifier, "a_12"),
   )
 
-
   def testPairs(tokenType1: TokenType,
                 text1: String,
                 tokenType2: TokenType,
@@ -58,44 +55,44 @@ class LexerTest extends UnitSpec {
     val token1 = lexer.nextToken()
     val token2 = lexer.nextToken()
     if (token1.tokenType == tokenType1
-      && token2.tokenType == tokenType2)
+        && token2.tokenType == tokenType2)
       return true
     false
   }
-
 
   def requireSeparator(type1: TokenType, type2: TokenType): Boolean = {
     val t1IsKeyword = type1.toString.endsWith("Keyword")
     val t2IsKeyword = type2.toString.endsWith("Keyword")
 
     (type1, type2, t1IsKeyword, t2IsKeyword) match {
-      case (_, _, true, true) => true
-      case (TokenType.identifier, _, _, true) => true
-      case (_, TokenType.identifier, true, _) => true
-      case (TokenType.literal, _, _, true) => true
-      case (_, TokenType.literal, true, _) => true
+      case (_, _, true, true)                                 => true
+      case (TokenType.identifier, _, _, true)                 => true
+      case (_, TokenType.identifier, true, _)                 => true
+      case (TokenType.literal, _, _, true)                    => true
+      case (_, TokenType.literal, true, _)                    => true
       case (TokenType.identifier, TokenType.identifier, _, _) => true
-      case (TokenType.identifier, TokenType.literal, _, _) => true
-      case (TokenType.literal, TokenType.literal, _, _) => true
-      case (TokenType.assign, TokenType.equal, _, _) => true
-      case (TokenType.equal, TokenType.equal, _, _) => true
-      case (TokenType.lt, TokenType.assign, _, _) => true
-      case (TokenType.lte, TokenType.assign, _, _) => true
-      case (TokenType.lt, TokenType.equal, _, _) => true
-      case (TokenType.gt, TokenType.assign, _, _) => true
-      case (TokenType.gte, TokenType.assign, _, _) => true
-      case (TokenType.gt, TokenType.equal, _, _) => true
-      case (TokenType.not, TokenType.assign, _, _) => true
-      case (TokenType.not, TokenType.equal, _, _) => true
-      case (TokenType.assign, TokenType.assign, _, _) => true
-      case (TokenType.sub, TokenType.gte, _, _) => true
-      case (TokenType.sub, TokenType.gt, _, _) => true
-      case _ => false
+      case (TokenType.identifier, TokenType.literal, _, _)    => true
+      case (TokenType.literal, TokenType.literal, _, _)       => true
+      case (TokenType.assign, TokenType.equal, _, _)          => true
+      case (TokenType.equal, TokenType.equal, _, _)           => true
+      case (TokenType.lt, TokenType.assign, _, _)             => true
+      case (TokenType.lte, TokenType.assign, _, _)            => true
+      case (TokenType.lt, TokenType.equal, _, _)              => true
+      case (TokenType.gt, TokenType.assign, _, _)             => true
+      case (TokenType.gte, TokenType.assign, _, _)            => true
+      case (TokenType.gt, TokenType.equal, _, _)              => true
+      case (TokenType.not, TokenType.assign, _, _)            => true
+      case (TokenType.not, TokenType.equal, _, _)             => true
+      case (TokenType.assign, TokenType.assign, _, _)         => true
+      case (TokenType.sub, TokenType.gte, _, _)               => true
+      case (TokenType.sub, TokenType.gt, _, _)                => true
+      case _                                                  => false
     }
   }
 
   def getTokenPairs: List[(TokenType, String, TokenType, String)] = {
-    var list: List[(TokenType.TokenType, String, TokenType.TokenType, String)] = List()
+    var list: List[(TokenType.TokenType, String, TokenType.TokenType, String)] =
+      List()
     for (x <- tokens; y <- tokens)
       yield {
         if (!requireSeparator(x._1, y._1))
@@ -104,8 +101,14 @@ class LexerTest extends UnitSpec {
     list.distinct
   }
 
-  def getTokenPairsWithSeparators: List[(TokenType, String, TokenType, String, TokenType, String)] = {
-    var list: List[(TokenType.TokenType, String, TokenType.TokenType, String, TokenType, String)] = List()
+  def getTokenPairsWithSeparators
+    : List[(TokenType, String, TokenType, String, TokenType, String)] = {
+    var list: List[(TokenType.TokenType,
+                    String,
+                    TokenType.TokenType,
+                    String,
+                    TokenType,
+                    String)] = List()
     for (x <- tokens; s <- separators; y <- tokens)
       yield {
         if (requireSeparator(x._1, y._1))
@@ -113,7 +116,6 @@ class LexerTest extends UnitSpec {
       }
     list.distinct
   }
-
 
   (tokens ++ separators ++ others).foreach { x =>
     it should s"be a ${x._1}${new Random().nextInt()}" in {

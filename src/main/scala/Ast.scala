@@ -18,7 +18,8 @@ case class ExpressionStatement(expression: Expression) extends Statement {
 
 case class BlockStatement(openBraceToken: Tokens,
                           statements: List[Statement],
-                          closeBraceToken: Tokens) extends Statement {
+                          closeBraceToken: Tokens)
+    extends Statement {
   override def getKind: TokenType = TokenType.blockStatement
 
   override def getChildren: List[Ast] = statements
@@ -28,7 +29,8 @@ case class FuncStatement(funcToken: Tokens,
                          identifier: Tokens,
                          parameters: List[ParamStatement],
                          returnType: ParamStatement,
-                         body: Statement) extends Statement {
+                         body: Statement)
+    extends Statement {
   override def getKind: TokenType = TokenType.funcStatement
 
   override def getChildren: List[Ast] =
@@ -38,12 +40,12 @@ case class FuncStatement(funcToken: Tokens,
     ) ++ parameters :+ returnType :+ body
 }
 
-case class ParamStatement(id: Tokens,
-                          paramType: Tokens) extends Statement {
+case class ParamStatement(id: Tokens, paramType: Tokens) extends Statement {
   override def getKind: TokenType = TokenType.paramStatement
 
   override def getChildren: List[Ast] = List(
-    id, paramType
+    id,
+    paramType
   )
 }
 
@@ -51,8 +53,8 @@ case class IfStatement(ifToken: Tokens,
                        condition: Expression,
                        expr1: Statement,
                        elseToken: Tokens,
-                       expr2: Statement
-                      ) extends Statement {
+                       expr2: Statement)
+    extends Statement {
   override def getKind: TokenType = TokenType.ifStatement
 
   override def getChildren: List[Ast] =
@@ -71,7 +73,8 @@ case class ForStatement(forToken: Tokens,
                         low: Expression,
                         toToken: Tokens,
                         upper: Expression,
-                        body: Statement) extends Statement {
+                        body: Statement)
+    extends Statement {
   override def getKind: TokenType = TokenType.forStatement
 
   override def getChildren: List[Ast] =
@@ -88,7 +91,8 @@ case class ForStatement(forToken: Tokens,
 
 case class WhileStatement(whileToken: Tokens,
                           condition: Expression,
-                          body: Statement) extends Statement {
+                          body: Statement)
+    extends Statement {
   override def getKind: TokenType = TokenType.whileStatement
 
   override def getChildren: List[Ast] =
@@ -99,8 +103,7 @@ case class WhileStatement(whileToken: Tokens,
     )
 }
 
-case class SyntaxTree(diagnostics: DiagnosticsBag,
-                      root: CompilationUnit)
+case class SyntaxTree(diagnostics: DiagnosticsBag, root: CompilationUnit)
 
 object SyntaxTree {
   def parse(text: String): SyntaxTree = {
@@ -111,8 +114,8 @@ object SyntaxTree {
   }
 }
 
-case class CompilationUnit(statement: Statement,
-                           eof: TokenType) extends Statement {
+case class CompilationUnit(statement: Statement, eof: TokenType)
+    extends Statement {
   override def getKind: TokenType.TokenType = TokenType.compilationUnit
 
   override def getChildren: List[Ast] = List[Ast](statement)
@@ -120,9 +123,8 @@ case class CompilationUnit(statement: Statement,
   override def toString: String = s"ExpressionTree:$statement"
 }
 
-case class BinaryNode(left: Expression,
-                      op: Tokens,
-                      right: Expression) extends Expression {
+case class BinaryNode(left: Expression, op: Tokens, right: Expression)
+    extends Expression {
   override def getKind: TokenType.TokenType = TokenType.binaryExpression
 
   override def getChildren: List[Expression] = {
@@ -140,17 +142,15 @@ case class LiteralNode(value: Tokens) extends Expression {
   }
 }
 
-case class BraceNode(left: Expression,
-                     op: Expression,
-                     right: Expression) extends Expression {
+case class BraceNode(left: Expression, op: Expression, right: Expression)
+    extends Expression {
   override def getKind: TokenType.TokenType = TokenType.braceExpression
 
   override def getChildren: List[Expression] = List(left, op, right)
 
 }
 
-case class UnaryNode(op: Expression,
-                     operand: Expression) extends Expression {
+case class UnaryNode(op: Expression, operand: Expression) extends Expression {
   override def getKind: TokenType.TokenType = TokenType.unaryExpression
 
   override def getChildren: List[Expression] = List[Expression](op, operand)
@@ -164,17 +164,21 @@ case class NameNode(identifierToken: Tokens) extends Expression {
 
 case class AssignmentNode(identifierToken: Tokens,
                           equalsToken: Tokens,
-                          expression: Expression) extends Expression {
+                          expression: Expression)
+    extends Expression {
   override def getKind: TokenType.TokenType = TokenType.assignmentExpression
 
-  override def getChildren: List[Expression] = List(identifierToken, equalsToken, expression)
+  override def getChildren: List[Expression] =
+    List(identifierToken, equalsToken, expression)
 }
 
 case class VariableDeclarationNode(keyword: Tokens,
                                    identifier: Tokens,
                                    equalsToken: Tokens,
-                                   expression: Expression) extends Statement {
+                                   expression: Expression)
+    extends Statement {
   override def getKind: TokenType = TokenType.variableDeclaration
 
-  override def getChildren: List[Ast] = List(keyword, identifier, equalsToken, expression)
+  override def getChildren: List[Ast] =
+    List(keyword, identifier, equalsToken, expression)
 }

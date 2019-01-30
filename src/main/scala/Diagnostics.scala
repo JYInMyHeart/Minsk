@@ -2,15 +2,12 @@ import TokenType.TokenType
 
 import scala.collection.mutable.ListBuffer
 
-class Diagnostics(val span: Span,
-                  val message: String) {
+class Diagnostics(val span: Span, val message: String) {
   override def toString: String = message
 }
 
 object Diagnostics {
-  def apply(span: Span,
-            message: String
-           ): Diagnostics = new Diagnostics(
+  def apply(span: Span, message: String): Diagnostics = new Diagnostics(
     span,
     message
   )
@@ -27,11 +24,13 @@ class DiagnosticsBag {
     report(span, msg)
   }
 
-  def reportCannotConvert(span: Span, bindTypeClass: String, varType: String): Unit = {
-    val msg = s"Cannot convert variable from $varType to $bindTypeClass at $span."
+  def reportCannotConvert(span: Span,
+                          bindTypeClass: String,
+                          varType: String): Unit = {
+    val msg =
+      s"Cannot convert variable from $varType to $bindTypeClass at $span."
     report(span, msg)
   }
-
 
   val reports: ListBuffer[Diagnostics] = new ListBuffer[Diagnostics]()
 
@@ -50,18 +49,28 @@ class DiagnosticsBag {
     report(span, msg)
   }
 
-  def reportUnexpectedToken(span: Span, actualType: TokenType, expectedType: TokenType): Unit = {
-    val msg = s"Unexpected token <$actualType>, expected <$expectedType> at $span."
+  def reportUnexpectedToken(span: Span,
+                            actualType: TokenType,
+                            expectedType: TokenType): Unit = {
+    val msg =
+      s"Unexpected token <$actualType>, expected <$expectedType> at $span."
     report(span, msg)
   }
 
-  def reportUndefinedUnaryOperator(span: Span, operatorText: String, operandType: String): Unit = {
-    val msg = s"Unary operator '$operatorText' is not defined for types $operandType at $span."
+  def reportUndefinedUnaryOperator(span: Span,
+                                   operatorText: String,
+                                   operandType: String): Unit = {
+    val msg =
+      s"Unary operator '$operatorText' is not defined for types $operandType at $span."
     report(span, msg)
   }
 
-  def reportUndefinedBinaryOperator(span: Span, operatorText: String, leftType: String, rightType: String): Unit = {
-    val msg = s"Binary operator '$operatorText' is not defined for types $leftType and $rightType at $span."
+  def reportUndefinedBinaryOperator(span: Span,
+                                    operatorText: String,
+                                    leftType: String,
+                                    rightType: String): Unit = {
+    val msg =
+      s"Binary operator '$operatorText' is not defined for types $leftType and $rightType at $span."
     report(span, msg)
   }
 
@@ -83,5 +92,3 @@ class DiagnosticsBag {
 object DiagnosticsBag {
   def apply(): DiagnosticsBag = new DiagnosticsBag()
 }
-
-

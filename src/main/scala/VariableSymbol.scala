@@ -1,11 +1,6 @@
-case class VariableSymbol(name: String,
-                          varType: String,
-                          isReadOnly: Boolean) {
+case class VariableSymbol(name: String, varType: String, isReadOnly: Boolean) {}
 
-}
-
-case class FunctionSymbol(name:VariableSymbol,
-                          parameters:List[VariableSymbol],
-                          returnSymbol:VariableSymbol,
-                          body:BindStatement)
-
+case class FunctionSymbol(name: VariableSymbol,
+                          parameters: List[VariableSymbol],
+                          returnSymbol: VariableSymbol,
+                          body: BindStatement)

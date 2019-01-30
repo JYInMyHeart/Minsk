@@ -8,7 +8,6 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, AnyVal]) {
     lastValue
   }
 
-
   def evalStatement(statement: BindStatement): Unit = {
     (statement.getKind, statement) match {
       case (BindType.blockStatement, s: BindBlockStatement) =>
@@ -19,27 +18,29 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, AnyVal]) {
         evalVariableStatement(s)
       case (BindType.ifStatement, s: BindIfStatement) =>
         evalIfStatement(s)
-      case (BindType.whileStatement,s:BindWhileStatement) =>
+      case (BindType.whileStatement, s: BindWhileStatement) =>
         evalWhileStatement(s)
-      case (BindType.forStatement,s:BindForStatement) =>
+      case (BindType.forStatement, s: BindForStatement) =>
         evalForStatement(s)
       case _ =>
         throw new Exception(s"Unexpected statement ${statement.bindTypeClass}")
     }
   }
 
-  def evalForStatement(statement:BindForStatement):Unit = {
+  def evalForStatement(statement: BindForStatement): Unit = {
     val start = evalExpression(statement.initializer)
     val end = evalExpression(statement.upper)
-    for(i <- start.asInstanceOf[Double].toInt to end.asInstanceOf[Double].toInt){
+    for (i <- start
+           .asInstanceOf[Double]
+           .toInt to end.asInstanceOf[Double].toInt) {
       variables(statement.variable) = i.toDouble
       evalStatement(statement.body)
     }
   }
 
-  def evalWhileStatement(statement:BindWhileStatement):Unit = {
-    while(evalExpression(statement.condition).asInstanceOf[Boolean])
-      evalStatement(statement.body)
+  def evalWhileStatement(statement: BindWhileStatement): Unit = {
+    while (evalExpression(statement.condition)
+             .asInstanceOf[Boolean]) evalStatement(statement.body)
   }
 
   def evalIfStatement(statement: BindIfStatement): Unit = {
@@ -71,7 +72,7 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, AnyVal]) {
     expression match {
       case node: BindLiteralExpression =>
         node.value match {
-          case i: Double => i
+          case i: Double  => i
           case i: Boolean => i
           case _ =>
             throw new Exception(s"unknown literal type")
@@ -81,22 +82,22 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, AnyVal]) {
         val right = evalExpression(node.boundRight)
         val op = node.bindType.bindType
         (left, right, op) match {
-          case (l: Double, r: Double, BindType.addition) => l + r
-          case (l: Double, r: Double, BindType.subtraction) => l - r
+          case (l: Double, r: Double, BindType.addition)       => l + r
+          case (l: Double, r: Double, BindType.subtraction)    => l - r
           case (l: Double, r: Double, BindType.multiplication) => l.toDouble * r
-          case (l: Double, r: Double, BindType.division) => l.toDouble / r
-          case (l: Double, r: Double, BindType.pow) => math.pow(l, r)
-          case (l: Double, r: Double, BindType.mod) => l % r
-          case (l: Double, r: Double, BindType.lt) => l < r
-          case (l: Double, r: Double, BindType.lte) => l <= r
-          case (l: Double, r: Double, BindType.gt) => l > r
-          case (l: Double, r: Double, BindType.gte) => l >= r
-          case (l: Double, r: Double, BindType.equal) => l == r
-          case (l: Double, r: Double, BindType.notequal) => l != r
-          case (l: Boolean, r: Boolean, BindType.and) => l && r
-          case (l: Boolean, r: Boolean, BindType.or) => l || r
-          case (l: Boolean, r: Boolean, BindType.equal) => l == r
-          case (l: Boolean, r: Boolean, BindType.notequal) => l != r
+          case (l: Double, r: Double, BindType.division)       => l.toDouble / r
+          case (l: Double, r: Double, BindType.pow)            => math.pow(l, r)
+          case (l: Double, r: Double, BindType.mod)            => l % r
+          case (l: Double, r: Double, BindType.lt)             => l < r
+          case (l: Double, r: Double, BindType.lte)            => l <= r
+          case (l: Double, r: Double, BindType.gt)             => l > r
+          case (l: Double, r: Double, BindType.gte)            => l >= r
+          case (l: Double, r: Double, BindType.equal)          => l == r
+          case (l: Double, r: Double, BindType.notequal)       => l != r
+          case (l: Boolean, r: Boolean, BindType.and)          => l && r
+          case (l: Boolean, r: Boolean, BindType.or)           => l || r
+          case (l: Boolean, r: Boolean, BindType.equal)        => l == r
+          case (l: Boolean, r: Boolean, BindType.notequal)     => l != r
           case _ =>
             throw new Exception(s"unknown literal type")
         }
@@ -104,12 +105,12 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, AnyVal]) {
       case node: BindUnaryExpression =>
         val value = evalExpression(node.boundOperand)
         (value, node.bindType.bindType) match {
-          case (o: Boolean, BindType.not) => !o
-          case (o: Int, BindType.negation) => -o
+          case (o: Boolean, BindType.not)     => !o
+          case (o: Int, BindType.negation)    => -o
           case (o: Double, BindType.negation) => -o
-          case (o: Int, BindType.identity) => -o
+          case (o: Int, BindType.identity)    => -o
           case (o: Double, BindType.identity) => o
-          case _ => throw new LexerException("unknown node type")
+          case _                              => throw new LexerException("unknown node type")
         }
       case node: BindVariableExpression =>
         variables(node.variableSymbol)
@@ -123,10 +124,8 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, AnyVal]) {
 }
 
 object Eval {
-  def apply(variables: mutable.HashMap[VariableSymbol, AnyVal]): Eval = new Eval(variables)
+  def apply(variables: mutable.HashMap[VariableSymbol, AnyVal]): Eval =
+    new Eval(variables)
 }
 
-case class EvaluationResult(diagnosticsBag: DiagnosticsBag,
-                            value: AnyVal)
-
-
+case class EvaluationResult(diagnosticsBag: DiagnosticsBag, value: AnyVal)
