@@ -20,8 +20,9 @@ case class Compilation(ast: SyntaxTree, previous: Compilation) {
   def continueWith(tree: SyntaxTree): Compilation = {
     Compilation(tree, this)
   }
+
   def evaluate(
-      variables: mutable.HashMap[VariableSymbol, AnyVal]): EvaluationResult = {
+                variables: mutable.HashMap[VariableSymbol, AnyVal]): EvaluationResult = {
     val diagnosticsBag = ast.diagnostics.concat(globalScope.diagnostics)
     if (!diagnosticsBag.isEmpty)
       return EvaluationResult(diagnosticsBag, null.asInstanceOf[AnyVal])

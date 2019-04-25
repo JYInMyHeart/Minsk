@@ -26,8 +26,6 @@ object Facts {
       case TokenType.annotationToken => ":"
       case TokenType.openBraceToken  => "{"
       case TokenType.closeBraceToken => "}"
-      case TokenType.openBraceToken  => "{"
-      case TokenType.closeBraceToken => "}"
       case TokenType.falseKeyword    => "false"
       case TokenType.trueKeyword     => "true"
       case TokenType.varKeyword      => "var"

@@ -39,6 +39,16 @@ case class Binder(parent: BoundScope) {
     res
   }
 
+  def bindFuncCallExpression(n: FunctionCallNode): BindFuncCallExpression = {
+    val name = n.identifier.value
+    val function = scope.tryLookupFunc(name)
+
+    if(function.param.length != n.expressions.length){
+      diagnostics.reportParamMismatch(n.identifier.span,function.param,n.expressions)
+    }
+    BindFuncCallExpression(function,for(i <- n.expressions) yield bindExpression(i))
+  }
+
   def bindExpression(tree: Expression): BindExpression = {
     (tree.getKind, tree) match {
       case (TokenType.nameExpression, n: NameNode) =>
@@ -53,13 +63,36 @@ case class Binder(parent: BoundScope) {
         bindLiteralExpression(n)
       case (TokenType.braceExpression, n: BraceNode) =>
         bindExpression(n.op)
+      case (TokenType.funcCallExpression,n:FunctionCallNode) =>
+        bindFuncCallExpression(n)
       case _ =>
         throw new LexerException(s"unexpected syntax ${tree.getKind}")
     }
   }
 
   private def bindFuncStatement(statement: FuncStatement): BindFuncStatement = {
-    null
+    val funcName =
+      VariableSymbol(statement.identifier.value,
+                     statement.returnType.paramType.value,
+                     isReadOnly = true)
+    val paramsList = for (param <- statement.parameters) yield {
+      VariableSymbol(param.id.value, param.paramType.value, isReadOnly = false)
+    }
+    paramsList.foreach(scope.tryDeclare(_))
+    val body = bindStatement(statement.body)
+//    if (body.bindTypeClass != statement.returnType.paramType.value)
+//      diagnostics.reportFunctionTypeMismatched(
+//        statement.identifier.span,
+//        statement.identifier.value,
+//        statement.returnType.paramType.value,
+//        body.bindTypeClass)
+    val function = BindFuncStatement(funcName, paramsList, body)
+    if (!scope.tryDeclare(function))
+      diagnostics.reportVariableAlreadyDeclared(
+        statement.identifier.span,
+        statement.returnType.paramType.value
+      )
+    function
   }
 
   private def bindForStatement(statement: ForStatement): BindForStatement = {
@@ -206,10 +239,11 @@ object Binder {
     val binder = Binder(parentScope)
     val expression = binder.bindStatement(syntax.statement)
     val variables = binder.scope.getDeclaredVariables
+    val functions = binder.scope.getDeclaredFunctions
     val diagnostics = binder.diagnostics
     if (previous != null)
       diagnostics concat previous.diagnostics
-    BoundGlobalScope(previous, diagnostics, variables, expression)
+    BoundGlobalScope(previous, diagnostics, variables, functions, expression)
   }
 
   def createParentScope(previous: BoundGlobalScope): BoundScope = {
@@ -290,7 +324,7 @@ case class BindForStatement(variable: VariableSymbol,
 }
 
 case class BindFuncStatement(identifier: VariableSymbol,
-                             param: VariableSymbol,
+                             param: List[VariableSymbol],
                              body: BindStatement)
     extends BindStatement {
   override def getKind: BindType = BindType.funcStatement
@@ -330,6 +364,11 @@ case class BindAssignmentExpression(variable: VariableSymbol,
                                     expression: BindExpression)
     extends BindExpression {
   override def bindTypeClass: String = expression.bindTypeClass
+}
+
+case class BindFuncCallExpression(bindFuncStatement: BindFuncStatement,
+                                  paramList:List[BindExpression]) extends BindExpression{
+  override def bindTypeClass: String = bindFuncStatement.bindTypeClass
 }
 
 object BoundBinaryOperator {

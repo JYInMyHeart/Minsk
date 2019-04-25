@@ -1,12 +1,14 @@
 import scala.collection.mutable
 
-class Eval(val variables: mutable.HashMap[VariableSymbol, AnyVal]) {
-  private var lastValue: AnyVal = _
+class Eval(val variables: mutable.HashMap[VariableSymbol, Any]) {
+  private var lastValue: Any = _
 
-  def eval(bindStatement: BindStatement): AnyVal = {
+  def eval(bindStatement: BindStatement): Any = {
     evalStatement(bindStatement)
     lastValue
   }
+
+
 
   def evalStatement(statement: BindStatement): Unit = {
     (statement.getKind, statement) match {
@@ -22,6 +24,8 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, AnyVal]) {
         evalWhileStatement(s)
       case (BindType.forStatement, s: BindForStatement) =>
         evalForStatement(s)
+      case (BindType.funcStatement,s:BindFuncStatement) =>
+        evalFuncStatement(s)
       case _ =>
         throw new Exception(s"Unexpected statement ${statement.bindTypeClass}")
     }
@@ -36,6 +40,11 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, AnyVal]) {
       variables(statement.variable) = i.toDouble
       evalStatement(statement.body)
     }
+  }
+
+
+  def evalFuncStatement(s: BindFuncStatement): Unit = {
+    lastValue = "<Function>"
   }
 
   def evalWhileStatement(statement: BindWhileStatement): Unit = {
@@ -68,7 +77,7 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, AnyVal]) {
     lastValue = evalExpression(statement.bindExpression)
   }
 
-  def evalExpression(expression: BindExpression): AnyVal = {
+  def evalExpression(expression: BindExpression): Any = {
     expression match {
       case node: BindLiteralExpression =>
         node.value match {
@@ -118,14 +127,21 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, AnyVal]) {
         val value = evalExpression(node.expression)
         variables(node.variable) = value
         value
+      case node:BindFuncCallExpression =>
+        val params = for(i <- node.paramList) yield evalExpression(i)
+        for(i <- node.bindFuncStatement.param.indices){
+          variables(node.bindFuncStatement.param(i)) = params(i)
+        }
+        val value = eval(node.bindFuncStatement.body)
+        value
       case _ => throw new LexerException("unknown node type")
     }
   }
 }
 
 object Eval {
-  def apply(variables: mutable.HashMap[VariableSymbol, AnyVal]): Eval =
+  def apply(variables: mutable.HashMap[VariableSymbol, Any]): Eval =
     new Eval(variables)
 }
 
-case class EvaluationResult(diagnosticsBag: DiagnosticsBag, value: AnyVal)
+case class EvaluationResult(diagnosticsBag: DiagnosticsBag, value: Any)

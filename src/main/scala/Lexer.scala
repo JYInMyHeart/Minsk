@@ -37,7 +37,17 @@ class Lexer(val pushBackInputStream: PushbackInputStream) {
       case "def"    => funcKeyword
       case "return" => returnKeyword
       case "Int"    => typeToken
-      case _        => identifier
+      case "Double"    => typeToken
+      case _        =>
+        read()
+        if(ch == '(') {
+          unRead(ch)
+          funcCallExpression
+        }
+        else {
+          unRead(ch)
+          identifier
+        }
     }
   }
 

@@ -14,6 +14,11 @@ object Diagnostics {
 }
 
 class DiagnosticsBag {
+  def reportParamMismatch(span: Span, param: List[VariableSymbol], expressions: List[Expression]) = {
+    val msg = s"functionCall's paramList should be $param bug got expressions at $span!"
+    report(span, msg)
+  }
+
   def reportCannotAssign(span: Span, name: String): Unit = {
     val msg = s"Variable $name cannot be assigned at $span!"
     report(span, msg)
@@ -24,6 +29,10 @@ class DiagnosticsBag {
     report(span, msg)
   }
 
+  def reportFunctionAlreadyDeclared(span: Span, name: String): Unit = {
+    val msg = s"Function $name has already declared at $span."
+    report(span, msg)
+  }
   def reportCannotConvert(span: Span,
                           bindTypeClass: String,
                           varType: String): Unit = {
@@ -76,6 +85,12 @@ class DiagnosticsBag {
 
   def reportUndefinedName(span: Span, name: String): Unit = {
     val msg = s"Undefined variable $name at $span"
+    report(span, msg)
+  }
+
+  def reportFunctionTypeMismatched(span: Span,  funcName:String,actualType: String,
+                                   expectedType: String): Unit = {
+    val msg = s"Function $funcName expect $expectedType but got $expectedType at $span"
     report(span, msg)
   }
 

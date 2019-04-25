@@ -28,7 +28,8 @@ object TokenType extends Enumeration {
   whileKeyword, elseKeyword, toKeyword, funcKeyword, returnKeyword,
   //expressions
   binaryExpression, numberExpression, unaryExpression, compilationUnit,
-  braceExpression, nameExpression, assignmentExpression, //statement
+  braceExpression, nameExpression, assignmentExpression, funcCallExpression,
+  //statement
   expressionStatement, variableDeclaration, blockStatement, ifStatement,
   forStatement, whileStatement, funcStatement, paramStatement = Value
 }

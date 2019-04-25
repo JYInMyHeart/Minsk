@@ -182,3 +182,10 @@ case class VariableDeclarationNode(keyword: Tokens,
   override def getChildren: List[Ast] =
     List(keyword, identifier, equalsToken, expression)
 }
+
+case class FunctionCallNode(identifier: Tokens, expressions: List[Expression])
+    extends Expression {
+  override def getKind: TokenType = TokenType.funcCallExpression
+
+  override def getChildren: List[Ast] = expressions
+}

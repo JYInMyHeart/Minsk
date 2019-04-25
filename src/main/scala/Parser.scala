@@ -124,7 +124,7 @@ class Parser(val lexer: Lexer) {
 
   def parseFuncStatement(): FuncStatement = {
     val func = eat(funcKeyword)
-    val id = eat(identifier)
+    val id = eat(funcCallExpression)
     eat(lb)
     var parameters: List[ParamStatement] = List()
     while (current.tokenType != rb) {
@@ -209,6 +209,8 @@ class Parser(val lexer: Lexer) {
         parseNameExpression()
       case TokenType.literal =>
         parseNumberLiteral()
+      case TokenType.funcCallExpression =>
+        parseFuncCallExpression()
       case _ =>
         parseNameExpression()
     }
@@ -235,5 +237,17 @@ class Parser(val lexer: Lexer) {
   private def parseNumberLiteral(): LiteralNode = {
     val number = eat(literal)
     LiteralNode(number)
+  }
+
+  private def parseFuncCallExpression():FunctionCallNode = {
+    val id = eat(funcCallExpression)
+    eat(lb)
+    var paramsList = List[Expression]()
+    while(current.tokenType != rb){
+      val expression = parseExpression()
+      paramsList :+= expression
+    }
+    eat(rb)
+    FunctionCallNode(id,paramsList)
   }
 }
