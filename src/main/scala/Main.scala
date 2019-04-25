@@ -4,7 +4,7 @@ import scala.io.StdIn
 object Main {
   def main(args: Array[String]): Unit = {
     import Printer._
-    val variables = new mutable.HashMap[VariableSymbol, AnyVal]()
+    val variables = new mutable.HashMap[VariableSymbol, Any]()
     var showTree = false
     var previous: Compilation = null
     while (true) {
