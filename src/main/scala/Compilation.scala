@@ -22,10 +22,10 @@ case class Compilation(ast: SyntaxTree, previous: Compilation) {
   }
 
   def evaluate(
-                variables: mutable.HashMap[VariableSymbol, AnyVal]): EvaluationResult = {
+      variables: mutable.HashMap[VariableSymbol, Any]): EvaluationResult = {
     val diagnosticsBag = ast.diagnostics.concat(globalScope.diagnostics)
     if (!diagnosticsBag.isEmpty)
-      return EvaluationResult(diagnosticsBag, null.asInstanceOf[AnyVal])
+      return EvaluationResult(diagnosticsBag, null.asInstanceOf[Any])
     val evaluator = Eval(variables)
     val value = evaluator.eval(globalScope.statement)
     EvaluationResult(DiagnosticsBag(), value)
