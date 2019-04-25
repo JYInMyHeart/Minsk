@@ -17,7 +17,9 @@ class LexerTest extends UnitSpec {
     (TokenType.whileKeyword, "while"),
     (TokenType.varKeyword, "var"),
     (TokenType.letKeyword, "let"),
-    (TokenType.toKeyword, "to")
+    (TokenType.toKeyword, "to"),
+    (TokenType.funcKeyword, "def"),
+    (TokenType.returnKeyword, "return")
   )
 
   val fixedTokens: List[(TokenType.Value, String)] =
@@ -26,7 +28,7 @@ class LexerTest extends UnitSpec {
       .filter(_._2 != null)
       .toList
 
-  val tokens: List[(TokenType.Value, String)] = fixedTokens ++ dynamicTokens
+  val tokens: List[(TokenType.Value, String)] = fixedTokens
 
   val separators = List(
     (TokenType.whiteSpace, " "),
