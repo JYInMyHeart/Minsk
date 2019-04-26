@@ -43,10 +43,13 @@ case class Binder(parent: BoundScope) {
     val name = n.identifier.value
     val function = scope.tryLookupFunc(name)
 
-    if(function.param.length != n.expressions.length){
-      diagnostics.reportParamMismatch(n.identifier.span,function.param,n.expressions)
+    if (function.param.length != n.expressions.length) {
+      diagnostics.reportParamMismatch(n.identifier.span,
+                                      function.param,
+                                      n.expressions)
     }
-    BindFuncCallExpression(function,for(i <- n.expressions) yield bindExpression(i))
+    BindFuncCallExpression(function,
+                           for (i <- n.expressions) yield bindExpression(i))
   }
 
   def bindExpression(tree: Expression): BindExpression = {
@@ -63,7 +66,7 @@ case class Binder(parent: BoundScope) {
         bindLiteralExpression(n)
       case (TokenType.braceExpression, n: BraceNode) =>
         bindExpression(n.op)
-      case (TokenType.funcCallExpression,n:FunctionCallNode) =>
+      case (TokenType.funcCallExpression, n: FunctionCallNode) =>
         bindFuncCallExpression(n)
       case _ =>
         throw new LexerException(s"unexpected syntax ${tree.getKind}")
@@ -78,20 +81,24 @@ case class Binder(parent: BoundScope) {
     val paramsList = for (param <- statement.parameters) yield {
       VariableSymbol(param.id.value, param.paramType.value, isReadOnly = false)
     }
+
+    scope = BoundScope(this.scope)
     paramsList.foreach(scope.tryDeclare(_))
     val body = bindStatement(statement.body)
-//    if (body.bindTypeClass != statement.returnType.paramType.value)
-//      diagnostics.reportFunctionTypeMismatched(
-//        statement.identifier.span,
-//        statement.identifier.value,
-//        statement.returnType.paramType.value,
-//        body.bindTypeClass)
+    scope = scope.parent
+    if (body.bindTypeClass != statement.returnType.paramType.value)
+      diagnostics.reportFunctionTypeMismatched(
+        statement.identifier.span,
+        statement.identifier.value,
+        statement.returnType.paramType.value,
+        body.bindTypeClass)
     val function = BindFuncStatement(funcName, paramsList, body)
     if (!scope.tryDeclare(function))
       diagnostics.reportVariableAlreadyDeclared(
         statement.identifier.span,
         statement.returnType.paramType.value
       )
+
     function
   }
 
@@ -136,7 +143,7 @@ case class Binder(parent: BoundScope) {
   private def bindBlockStatement(
       statement: BlockStatement): BindBlockStatement = {
     var statements: List[BindStatement] = List()
-    scope = BoundScope(scope)
+    scope = BoundScope(this.scope)
     for (s <- statement.statements) {
       val statement = bindStatement(s)
       statements :+= statement
@@ -284,7 +291,7 @@ case class BindExpressionStatement(bindExpression: BindExpression)
 
 case class BindBlockStatement(bindStatements: List[BindStatement])
     extends BindStatement {
-  override def bindTypeClass: String = null
+  override def bindTypeClass: String = bindStatements.last.bindTypeClass
 
   override def getKind: BindType.BindType = BindType.blockStatement
 }
@@ -367,7 +374,8 @@ case class BindAssignmentExpression(variable: VariableSymbol,
 }
 
 case class BindFuncCallExpression(bindFuncStatement: BindFuncStatement,
-                                  paramList:List[BindExpression]) extends BindExpression{
+                                  paramList: List[BindExpression])
+    extends BindExpression {
   override def bindTypeClass: String = bindFuncStatement.bindTypeClass
 }
 
@@ -388,64 +396,81 @@ object BoundBinaryOperator {
       result
     )
 
-  private[this] def binaryOperators: List[BoundBinaryOperator] =
-    List(
-      BoundBinaryOperator(TokenType.add,
-                          BindType.addition,
-                          double,
-                          double,
-                          double),
-      BoundBinaryOperator(TokenType.sub,
-                          BindType.subtraction,
-                          double,
-                          double,
-                          double),
-      BoundBinaryOperator(TokenType.div,
-                          BindType.division,
-                          double,
-                          double,
-                          double),
-      BoundBinaryOperator(TokenType.plus,
-                          BindType.multiplication,
-                          double,
-                          double,
-                          double),
-      BoundBinaryOperator(TokenType.pow, BindType.pow, double, double, double),
-      BoundBinaryOperator(TokenType.mod, BindType.mod, double, double, double),
-      BoundBinaryOperator(TokenType.lt, BindType.lt, double, double, bool),
-      BoundBinaryOperator(TokenType.gt, BindType.gt, double, double, bool),
-      BoundBinaryOperator(TokenType.lte, BindType.lte, double, double, bool),
-      BoundBinaryOperator(TokenType.gte, BindType.gte, double, double, bool),
-      BoundBinaryOperator(TokenType.equal,
-                          BindType.equal,
-                          double,
-                          double,
-                          bool),
-      BoundBinaryOperator(TokenType.equal, BindType.equal, bool, bool, bool),
-      BoundBinaryOperator(TokenType.notequal,
-                          BindType.notequal,
-                          double,
-                          double,
-                          bool),
-      BoundBinaryOperator(TokenType.notequal,
-                          BindType.notequal,
-                          bool,
-                          bool,
-                          bool),
-      BoundBinaryOperator(TokenType.and, BindType.and, bool, bool, bool),
-      BoundBinaryOperator(TokenType.or, BindType.or, bool, bool, bool)
-    )
-
   def bind(tokenType: TokenType,
            left: String,
            right: String): BoundBinaryOperator = {
-    val binaryOperator = binaryOperators.filter(x =>
-      x.tokenType == tokenType && x.left == left && x.right == right)
-    if (binaryOperator.nonEmpty)
-      binaryOperator.last
-    else
-      null
+    val bindType = getBindType(tokenType)
+
+    if (left == right) {
+      if (comparableOperations.contains(bindType))
+        BoundBinaryOperator(tokenType,
+                            getBindType(tokenType),
+                            left,
+                            right,
+                            bool)
+      else if (computeOperations.contains(bindType))
+        BoundBinaryOperator(tokenType,
+                            getBindType(tokenType),
+                            left,
+                            right,
+                            left)
+      else if (logicOperations.contains(bindType))
+        BoundBinaryOperator(tokenType, getBindType(tokenType), bool, bool, bool)
+      else
+        null
+    } else {
+      if (convert(left, right))
+        BoundBinaryOperator(tokenType,
+                            getBindType(tokenType),
+                            right,
+                            right,
+                            right)
+      else if (convert(right, left))
+        BoundBinaryOperator(tokenType, getBindType(tokenType), left, left, left)
+      else
+        null
+    }
   }
+
+  def convert(left: String, right: String): Boolean = (left, right) match {
+    case (`int`, `double`) => true
+    case _                 => false
+  }
+
+  def getBindType(tokenType: TokenType): BindType.Value = {
+    tokenType match {
+      case TokenType.add      => BindType.addition
+      case TokenType.sub      => BindType.subtraction
+      case TokenType.mul      => BindType.multiplication
+      case TokenType.div      => BindType.division
+      case TokenType.pow      => BindType.pow
+      case TokenType.mod      => BindType.mod
+      case TokenType.lt       => BindType.lt
+      case TokenType.gt       => BindType.gt
+      case TokenType.lte      => BindType.lte
+      case TokenType.gte      => BindType.gte
+      case TokenType.equal    => BindType.equal
+      case TokenType.notequal => BindType.notequal
+      case TokenType.and      => BindType.and
+      case TokenType.or       => BindType.or
+    }
+  }
+
+  private val logicOperations = List(BindType.and, BindType.or)
+
+  private val comparableOperations = List(BindType.lt,
+                                          BindType.gt,
+                                          BindType.lte,
+                                          BindType.gte,
+                                          BindType.equal,
+                                          BindType.notequal)
+
+  private val computeOperations = List(BindType.addition,
+                                       BindType.subtraction,
+                                       BindType.multiplication,
+                                       BindType.division,
+                                       BindType.pow,
+                                       BindType.mod)
 }
 
 sealed class BoundUnaryOperator(val tokenType: TokenType,

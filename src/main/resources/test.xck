@@ -1,0 +1,9 @@
+
+{
+
+
+def f1(a:Integer):Double = {
+        a + 1
+    }
+
+}

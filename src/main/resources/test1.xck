@@ -1,0 +1,25 @@
+{
+
+
+    def f1(a:Integer):Double = {
+        a + 1
+    }
+
+    var a = 5
+
+    var b = f1(a)
+
+    def sum(n:Double):Double = {
+        var sum = 0
+        for i = 0 to n {
+            sum = sum + i
+        }
+        sum
+    }
+
+    sum(b) + 1
+
+
+    f1(sum(b) + 2 - 3) / 4 > 5 & 2 > 3
+
+}

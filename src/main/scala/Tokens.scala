@@ -21,7 +21,7 @@ object TokenType extends Enumeration {
   val
   //tokens
   keyword, func, identifier, literal, lb, rb, assign, equal, notequal, lt, gt,
-  lte, gte, add, sub, plus, div, mod, and, or, not, pow, whiteSpace, newline,
+  lte, gte, add, sub, mul, div, mod, and, or, not, pow, whiteSpace, newline,
   eof, wrong, openBraceToken, closeBraceToken, annotationToken, typeToken,
   //keyword
   falseKeyword, trueKeyword, varKeyword, letKeyword, ifKeyword, forKeyword,

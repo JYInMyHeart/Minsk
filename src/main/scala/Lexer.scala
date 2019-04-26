@@ -36,7 +36,7 @@ class Lexer(val pushBackInputStream: PushbackInputStream) {
       case "to"     => toKeyword
       case "def"    => funcKeyword
       case "return" => returnKeyword
-      case "Int"    => typeToken
+      case "Integer"    => typeToken
       case "Double"    => typeToken
       case _        =>
         read()
@@ -67,7 +67,7 @@ class Lexer(val pushBackInputStream: PushbackInputStream) {
         val tokenType = getKeyWordType(text)
         Tokens(tokenType, text, Span(lineCount, columnCount))
       case '+' => Tokens(add, "+", Span(lineCount, columnCount))
-      case '*' => Tokens(plus, "*", Span(lineCount, columnCount))
+      case '*' => Tokens(mul, "*", Span(lineCount, columnCount))
       case '/' => Tokens(div, "/", Span(lineCount, columnCount))
       case '%' => Tokens(mod, "%", Span(lineCount, columnCount))
       case '^' => Tokens(pow, "^", Span(lineCount, columnCount))

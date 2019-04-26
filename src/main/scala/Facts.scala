@@ -15,7 +15,7 @@ object Facts {
       case TokenType.gte             => ">="
       case TokenType.add             => "+"
       case TokenType.sub             => "-"
-      case TokenType.plus            => "*"
+      case TokenType.`mul`            => "*"
       case TokenType.div             => "/"
       case TokenType.mod             => "%"
       case TokenType.and             => "&"
@@ -72,7 +72,7 @@ object Facts {
       case x
           if x == TokenType.div
             | x == TokenType.mod
-            | x == TokenType.plus
+            | x == TokenType.mul
             | x == TokenType.pow =>
         5
       case x
