@@ -62,7 +62,7 @@ object Main {
   def loadFile(path: String): Unit = {
     val realPath = this.getClass.getResource(path).getPath
     val file = Source.fromFile(realPath, "UTF-8")
-    val source = file.getLines().reduce(_ + _)
+    val source = file.mkString
     evalResult(source)
   }
   def main(args: Array[String]): Unit = {

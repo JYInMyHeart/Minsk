@@ -32,11 +32,11 @@ class LexerTest extends UnitSpec {
 
   val separators = List(
     (TokenType.whiteSpace, " "),
-    (TokenType.newline, "\n"),
+    (TokenType.whiteSpace, "\r"),
   )
 
   val others = List(
-    (TokenType.newline, "\r\n"),
+    (TokenType.newline, "\n"),
     (TokenType.wrong, "@#"),
     (TokenType.identifier, "a"),
     (TokenType.identifier, "ZCG"),

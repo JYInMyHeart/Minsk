@@ -11,7 +11,8 @@ class Parser(val lexer: Lexer) {
     var token = lexer.nextToken()
     while (token.tokenType != eof) {
       if (token.tokenType != wrong
-          && token.tokenType != whiteSpace)
+          && token.tokenType != whiteSpace
+        && token.tokenType != newline)
         tokensList :+= token
       token = lexer.nextToken()
     }

@@ -1,9 +1,6 @@
 
 {
-
-
-def f1(a:Integer):Double = {
-        a + 1
-    }
+var a = 2
+a =3
 
 }

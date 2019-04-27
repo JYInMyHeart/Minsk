@@ -54,11 +54,11 @@ class Lexer(val pushBackInputStream: PushbackInputStream) {
   def nextToken(): Tokens = {
     read()
     ch match {
-      case x if x == ' ' =>
+      case x if x == ' ' | x == '\r' =>
         Tokens(whiteSpace, null, Span(lineCount, columnCount))
-      case x if x == '\n' | x == '\r' =>
+      case x if x == '\n'  =>
         lineCount += 1
-        columnCount = 0
+        columnCount = -3
         Tokens(newline, null, Span(lineCount, columnCount))
       case x if Character.isDigit(x) =>
         Tokens(literal, getNum, Span(lineCount, columnCount))
@@ -99,10 +99,14 @@ class Lexer(val pushBackInputStream: PushbackInputStream) {
         Tokens(lb, "(", Span(lineCount, columnCount))
       case ')' =>
         Tokens(rb, ")", Span(lineCount, columnCount))
+      case '[' =>
+        Tokens(lmb, "[", Span(lineCount, columnCount))
+      case ']' =>
+        Tokens(rmb, "]", Span(lineCount, columnCount))
       case '{' =>
-        Tokens(openBraceToken, "(", Span(lineCount, columnCount))
+        Tokens(openBraceToken, "{", Span(lineCount, columnCount))
       case '}' =>
-        Tokens(closeBraceToken, "(", Span(lineCount, columnCount))
+        Tokens(closeBraceToken, "}", Span(lineCount, columnCount))
       case '<' =>
         read()
         ch match {
