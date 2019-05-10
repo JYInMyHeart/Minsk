@@ -1,3 +1,8 @@
+package binder
+
+import eval.DiagnosticsBag
+import symbol.VariableSymbol
+
 import scala.collection.mutable
 
 case class BoundScope(parent: BoundScope) {

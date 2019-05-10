@@ -1,18 +1,26 @@
-import TokenType.TokenType
+package parser
 
-class Tokens(val tokenType: TokenType, val value: String, val span: Span)
+import parser.TokenType.TokenType
+import sourceText.TextSpan
+
+class Token(val tokenType: TokenType,
+            val position:Int,
+            val text:String,
+            val value: Any)
     extends Expression {
+
+  def span = TextSpan(position,text.length)
   override def toString: String =
-    s"<$tokenType :$value >  $span"
+    s"<$tokenType :$text >  $span"
 
   override def getKind: TokenType = tokenType
 
-  override def getChildren(): List[Ast] = null
+
 }
 
-object Tokens {
-  def apply(tokenType: TokenType, value: String, span: Span): Tokens =
-    new Tokens(tokenType, value, span)
+object Token {
+  def apply(tokenType: TokenType,position:Int,text:String, value: Any): Token =
+    new Token(tokenType, position,text,value)
 }
 
 object TokenType extends Enumeration {
@@ -20,9 +28,11 @@ object TokenType extends Enumeration {
   type TokenType = Value
   val
   //tokens
-  keyword, func, identifier, literal, lb, rb,lmb,rmb, assign, equal, notequal, lt, gt,
-  lte, gte, add, sub, mul, div, mod, and, or, not, pow, whiteSpace, newline,
-  eof, wrong, openBraceToken, closeBraceToken, annotationToken, typeToken,
+  keyword, func, identifierToken, literal,numberToken, openParenthesisToken, closeParenthesisToken,lmb,rmb,
+  equalsToken, equalsEqualsToken,bangToken, bangEqualsToken, lessToken, greaterToken,
+  lessOrEqualsToken, greaterOrEqualsToken, plusToken, minusToken, starToken, slashToken,
+  mod, ampersandToken, ampersandAmpersandToken,pipeToken,pipePipeToken, tildeToken, hatToken, whiteSpaceToken, newline,
+  eofToken, wrongToken, stringToken,openBraceToken, closeBraceToken, annotationToken, typeToken,commaToken,
   //keyword
   falseKeyword, trueKeyword, varKeyword, letKeyword, ifKeyword, forKeyword,
   whileKeyword, elseKeyword, toKeyword, funcKeyword, returnKeyword,

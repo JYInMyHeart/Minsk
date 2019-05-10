@@ -1,4 +1,5 @@
-import Facts._
+import parser.Facts._
+import parser.{SyntaxTree, TokenType}
 
 import scala.util.Random
 
@@ -29,13 +30,13 @@ class ParserTest extends UnitSpec {
       e.assertNode(TokenType.binaryExpression)
       e.assertNode(TokenType.binaryExpression)
       e.assertNode(TokenType.nameExpression)
-      e.assertToken(TokenType.identifier, "a")
+      e.assertToken(TokenType.identifierToken, "a")
       e.assertToken(op1, op1Text)
       e.assertNode(TokenType.nameExpression)
-      e.assertToken(TokenType.identifier, "b")
+      e.assertToken(TokenType.identifierToken, "b")
       e.assertToken(op2, op2Text)
       e.assertNode(TokenType.nameExpression)
-      e.assertToken(TokenType.identifier, "c")
+      e.assertToken(TokenType.identifierToken, "c")
     } else {
       val e = AssertingEnumerator(
         AssertingEnumerator.flatten(expression.root).iterator)
@@ -44,14 +45,14 @@ class ParserTest extends UnitSpec {
       e.assertNode(TokenType.expressionStatement)
       e.assertNode(TokenType.binaryExpression)
       e.assertNode(TokenType.nameExpression)
-      e.assertToken(TokenType.identifier, "a")
+      e.assertToken(TokenType.identifierToken, "a")
       e.assertToken(op1, op1Text)
       e.assertNode(TokenType.binaryExpression)
       e.assertNode(TokenType.nameExpression)
-      e.assertToken(TokenType.identifier, "b")
+      e.assertToken(TokenType.identifierToken, "b")
       e.assertToken(op2, op2Text)
       e.assertNode(TokenType.nameExpression)
-      e.assertToken(TokenType.identifier, "c")
+      e.assertToken(TokenType.identifierToken, "c")
     }
   }
 
@@ -72,10 +73,10 @@ class ParserTest extends UnitSpec {
       e.assertNode(TokenType.unaryExpression)
       e.assertToken(un, unText)
       e.assertNode(TokenType.nameExpression)
-      e.assertToken(TokenType.identifier, "a")
+      e.assertToken(TokenType.identifierToken, "a")
       e.assertToken(bin, binText)
       e.assertNode(TokenType.nameExpression)
-      e.assertToken(TokenType.identifier, "b")
+      e.assertToken(TokenType.identifierToken, "b")
     } else {
       val e = AssertingEnumerator(
         AssertingEnumerator.flatten(expression.root).iterator)
@@ -86,10 +87,10 @@ class ParserTest extends UnitSpec {
       e.assertToken(un, unText)
       e.assertNode(TokenType.binaryExpression)
       e.assertNode(TokenType.nameExpression)
-      e.assertToken(TokenType.identifier, "a")
+      e.assertToken(TokenType.identifierToken, "a")
       e.assertToken(bin, binText)
       e.assertNode(TokenType.nameExpression)
-      e.assertToken(TokenType.identifier, "b")
+      e.assertToken(TokenType.identifierToken, "b")
     }
   }
 

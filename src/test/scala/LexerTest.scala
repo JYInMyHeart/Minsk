@@ -1,14 +1,16 @@
-import TokenType.TokenType
+import parser.TokenType.TokenType
+import parser.{Facts, TokenType,Parser}
+import sourceText.SourceText
 
 import scala.util.Random
 
 class LexerTest extends UnitSpec {
   val dynamicTokens: List[(TokenType, String)] = List(
-    //    (TokenType.keyword,""),
-    //      (TokenType.func,""),
-    (TokenType.identifier, "a_12"),
+    //    (parser.TokenType.keyword,""),
+    //      (parser.TokenType.func,""),
+    (TokenType.identifierToken, "a_12"),
     (TokenType.literal, "1234"),
-    (TokenType.eof, "\0"),
+    (TokenType.eofToken, "\0"),
     (TokenType.falseKeyword, "false"),
     (TokenType.trueKeyword, "true"),
     (TokenType.ifKeyword, "if"),
@@ -31,33 +33,33 @@ class LexerTest extends UnitSpec {
   val tokens: List[(TokenType.Value, String)] = fixedTokens
 
   val separators = List(
-    (TokenType.whiteSpace, " "),
-    (TokenType.whiteSpace, "\r"),
+    (TokenType.whiteSpaceToken, " "),
+    (TokenType.whiteSpaceToken, "\r"),
   )
 
   val others = List(
     (TokenType.newline, "\n"),
-    (TokenType.wrong, "@#"),
-    (TokenType.identifier, "a"),
-    (TokenType.identifier, "ZCG"),
-    (TokenType.identifier, "_12"),
-    (TokenType.identifier, "__"),
-    (TokenType.identifier, "_a1"),
-    (TokenType.identifier, "_ab"),
-    (TokenType.identifier, "a_b"),
-    (TokenType.identifier, "a_12c"),
-    (TokenType.identifier, "a_12"),
+    (TokenType.wrongToken, "@#"),
+    (TokenType.identifierToken, "a"),
+    (TokenType.identifierToken, "ZCG"),
+    (TokenType.identifierToken, "_12"),
+    (TokenType.identifierToken, "__"),
+    (TokenType.identifierToken, "_a1"),
+    (TokenType.identifierToken, "_ab"),
+    (TokenType.identifierToken, "a_b"),
+    (TokenType.identifierToken, "a_12c"),
+    (TokenType.identifierToken, "a_12"),
   )
 
   def testPairs(tokenType1: TokenType,
                 text1: String,
                 tokenType2: TokenType,
                 text2: String): Boolean = {
-    val lexer = Lexer.newLexer(text1 + text2)
-    val token1 = lexer.nextToken()
-    val token2 = lexer.nextToken()
-    if (token1.tokenType == tokenType1
-        && token2.tokenType == tokenType2)
+    val lexer = Parser(SourceText(text1 + text2))
+    val token1 = lexer.eat(tokenType2)
+    val token2 = lexer.eat(tokenType2)
+    if (token1.getKind == tokenType1
+        && token2.getKind == tokenType2)
       return true
     false
   }
@@ -68,26 +70,26 @@ class LexerTest extends UnitSpec {
 
     (type1, type2, t1IsKeyword, t2IsKeyword) match {
       case (_, _, true, true)                                 => true
-      case (TokenType.identifier, _, _, true)                 => true
-      case (_, TokenType.identifier, true, _)                 => true
+      case (TokenType.`identifierToken`, _, _, true)                 => true
+      case (_, TokenType.`identifierToken`, true, _)                 => true
       case (TokenType.literal, _, _, true)                    => true
       case (_, TokenType.literal, true, _)                    => true
-      case (TokenType.identifier, TokenType.identifier, _, _) => true
-      case (TokenType.identifier, TokenType.literal, _, _)    => true
+      case (TokenType.`identifierToken`, TokenType.`identifierToken`, _, _) => true
+      case (TokenType.`identifierToken`, TokenType.literal, _, _)    => true
       case (TokenType.literal, TokenType.literal, _, _)       => true
-      case (TokenType.assign, TokenType.equal, _, _)          => true
-      case (TokenType.equal, TokenType.equal, _, _)           => true
-      case (TokenType.lt, TokenType.assign, _, _)             => true
-      case (TokenType.lte, TokenType.assign, _, _)            => true
-      case (TokenType.lt, TokenType.equal, _, _)              => true
-      case (TokenType.gt, TokenType.assign, _, _)             => true
-      case (TokenType.gte, TokenType.assign, _, _)            => true
-      case (TokenType.gt, TokenType.equal, _, _)              => true
-      case (TokenType.not, TokenType.assign, _, _)            => true
-      case (TokenType.not, TokenType.equal, _, _)             => true
-      case (TokenType.assign, TokenType.assign, _, _)         => true
-      case (TokenType.sub, TokenType.gte, _, _)               => true
-      case (TokenType.sub, TokenType.gt, _, _)                => true
+      case (TokenType.`equalsToken`, TokenType.`equalsEqualsToken`, _, _)          => true
+      case (TokenType.`equalsEqualsToken`, TokenType.`equalsEqualsToken`, _, _)           => true
+      case (TokenType.`lessToken`, TokenType.`equalsToken`, _, _)             => true
+      case (TokenType.`lessOrEqualsToken`, TokenType.`equalsToken`, _, _)            => true
+      case (TokenType.`lessToken`, TokenType.`equalsEqualsToken`, _, _)              => true
+      case (TokenType.`greaterToken`, TokenType.`equalsToken`, _, _)             => true
+      case (TokenType.`greaterOrEqualsToken`, TokenType.`equalsToken`, _, _)            => true
+      case (TokenType.`greaterToken`, TokenType.`equalsEqualsToken`, _, _)              => true
+      case (TokenType.`tildeToken`, TokenType.`equalsToken`, _, _)            => true
+      case (TokenType.`tildeToken`, TokenType.`equalsEqualsToken`, _, _)             => true
+      case (TokenType.`equalsToken`, TokenType.`equalsToken`, _, _)         => true
+      case (TokenType.`minusToken`, TokenType.`greaterOrEqualsToken`, _, _)               => true
+      case (TokenType.`minusToken`, TokenType.`greaterToken`, _, _)                => true
       case _                                                  => false
     }
   }
@@ -121,8 +123,8 @@ class LexerTest extends UnitSpec {
 
   (tokens ++ separators ++ others).foreach { x =>
     it should s"be a ${x._1}${new Random().nextInt()}" in {
-      val token = Lexer.newLexer(x._2).nextToken()
-      assert(x._1 == token.tokenType)
+      val token = Parser(SourceText(x._2)).eat(x._1)
+      assert(x._1 == token.getKind)
     }
   }
 
@@ -134,13 +136,13 @@ class LexerTest extends UnitSpec {
 
   getTokenPairsWithSeparators.foreach { x =>
     it should s"be a ${x._1} and ${x._3} ${new Random().nextInt()}" in {
-      val lexer = Lexer.newLexer(x._2 + x._4 + x._6)
-      val token1 = lexer.nextToken()
-      val token2 = lexer.nextToken()
-      val token3 = lexer.nextToken()
-      assert(token1.tokenType == x._1)
-      assert(token2.tokenType == x._3)
-      assert(token3.tokenType == x._5)
+      val lexer = Parser(SourceText(x._2 + x._4 + x._6))
+      val token1 = lexer.eat(x._1)
+      val token2 = lexer.eat(x._3)
+      val token3 = lexer.eat(x._5)
+      assert(token1.getKind == x._1)
+      assert(token2.getKind == x._3)
+      assert(token3.getKind == x._5)
       assert(token1.value == x._2)
       assert(token2.value == null)
       assert(token3.value == x._6)

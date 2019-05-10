@@ -1,32 +1,33 @@
-import TokenType.TokenType
+import parser.TokenType.TokenType
+import parser.{Node, Token}
 
 import scala.collection.mutable
 
-class AssertingEnumerator(enumerator: Iterator[Ast]) {
+class AssertingEnumerator(enumerator: Iterator[Node]) {
 
   def assertNode(kind: TokenType): Unit = {
     assert(enumerator.hasNext)
     val current = enumerator.next()
     assert(kind == current.getKind)
-    assert(!current.isInstanceOf[Tokens])
+    assert(!current.isInstanceOf[Token])
   }
 
   def assertToken(kind: TokenType, text: String): Unit = {
     assert(enumerator.hasNext)
     val current = enumerator.next()
     assert(kind == current.getKind)
-    assert(current.isInstanceOf[Tokens])
-    assert(text == current.asInstanceOf[Tokens].value)
+    assert(current.isInstanceOf[Token])
+    assert(text == current.asInstanceOf[Token].value)
   }
 
 }
 object AssertingEnumerator {
 
-  def apply(enumerator: Iterator[Ast]): AssertingEnumerator =
+  def apply(enumerator: Iterator[Node]): AssertingEnumerator =
     new AssertingEnumerator(enumerator)
-  def flatten(expression: Ast): List[Ast] = {
-    var res = List[Ast]()
-    val stack: mutable.Stack[Ast] = mutable.Stack()
+  def flatten(expression: Node): List[Node] = {
+    var res = List[Node]()
+    val stack: mutable.Stack[Node] = mutable.Stack()
     stack.push(expression)
     while (stack.nonEmpty) {
       val n = stack.pop()

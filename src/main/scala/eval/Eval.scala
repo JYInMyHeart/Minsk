@@ -1,3 +1,9 @@
+package eval
+
+import binder.{BindAssignmentExpression, BindBinaryExpression, BindBlockStatement, BindExpression, BindExpressionStatement, BindForStatement, BindFuncCallExpression, BindFuncStatement, BindIfStatement, BindLiteralExpression, BindStatement, BindUnaryExpression, BindVariableExpression, BindVariableStatement, BindWhileStatement}
+import parser.BindType
+import symbol._
+
 import scala.collection.mutable
 
 class Eval(val variables: mutable.HashMap[VariableSymbol, Any]) {
@@ -83,6 +89,7 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, Any]) {
         node.value match {
           case i: Double  => i
           case i: Boolean => i
+          case i: Int => i
           case _ =>
             throw new Exception(s"unknown literal type")
         }
@@ -119,7 +126,7 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, Any]) {
           case (o: Double, BindType.negation) => -o
           case (o: Int, BindType.identity)    => -o
           case (o: Double, BindType.identity) => o
-          case _                              => throw new LexerException("unknown node type")
+          case _                              => throw new Exception("unknown node type")
         }
       case node: BindVariableExpression =>
         variables(node.variableSymbol)
@@ -134,7 +141,7 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, Any]) {
         }
         val value = eval(node.bindFuncStatement.body)
         value
-      case _ => throw new LexerException("unknown node type")
+      case _ => throw new Exception("unknown node type")
     }
   }
 }

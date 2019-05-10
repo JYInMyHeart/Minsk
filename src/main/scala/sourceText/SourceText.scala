@@ -6,6 +6,8 @@ class SourceText(text: String) {
 
   def lines: List[TextLine] = SourceText.parseLines(this, text)
 
+  def length = text.length
+
   def GetLineIndex(position: Int): Int = {
     var lower = 0
     var upper = lines.length - 1
@@ -26,6 +28,15 @@ class SourceText(text: String) {
 
     lower
   }
+
+  def at(index:Int): Char = text.charAt(index)
+
+
+  override def toString: String = text
+
+  def toString(start: Int, length: Int): String = text.substring(start, length)
+
+  def toString(span: TextSpan): String = toString(span.start, span.length)
 }
 
 object SourceText {
@@ -74,4 +85,6 @@ object SourceText {
       addLine(result, sourceText, position, lineStart, 0)
     result.toList
   }
+
+  def apply(text: String): SourceText = new SourceText(text)
 }

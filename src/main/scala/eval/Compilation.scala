@@ -1,3 +1,9 @@
+package eval
+
+import binder.{Binder, BoundGlobalScope}
+import parser.SyntaxTree
+import symbol.VariableSymbol
+
 import scala.collection.mutable
 
 case class Compilation(ast: SyntaxTree, previous: Compilation) {

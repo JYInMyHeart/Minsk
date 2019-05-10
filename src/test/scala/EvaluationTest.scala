@@ -1,3 +1,7 @@
+import eval.Compilation
+import parser.SyntaxTree
+import symbol.VariableSymbol
+
 import scala.collection.mutable
 import scala.util.Random
 

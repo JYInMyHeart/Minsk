@@ -1,6 +1,11 @@
-import BindType.BindType
-import TokenType.TokenType
-import TypeMapping._
+package binder
+
+import binder.TypeMapping.{bool, double, int}
+import eval.DiagnosticsBag
+import parser.BindType.BindType
+import parser.TokenType.TokenType
+import parser._
+import symbol.VariableSymbol
 
 import scala.collection.mutable
 
@@ -27,7 +32,7 @@ case class Binder(parent: BoundScope) {
       case (TokenType.funcStatement, s: FuncStatement) =>
         bindFuncStatement(s)
       case _ =>
-        throw new LexerException(s"unexpected syntax ${statement.getKind}")
+        throw new Exception(s"unexpected syntax ${statement.getKind}")
     }
   }
 
@@ -40,7 +45,7 @@ case class Binder(parent: BoundScope) {
   }
 
   def bindFuncCallExpression(n: FunctionCallNode): BindFuncCallExpression = {
-    val name = n.identifier.value
+    val name = n.identifier.text
     val function = scope.tryLookupFunc(name)
 
     if (function.param.length != n.expressions.length) {
@@ -69,17 +74,17 @@ case class Binder(parent: BoundScope) {
       case (TokenType.funcCallExpression, n: FunctionCallNode) =>
         bindFuncCallExpression(n)
       case _ =>
-        throw new LexerException(s"unexpected syntax ${tree.getKind}")
+        throw new Exception(s"unexpected syntax ${tree.getKind}")
     }
   }
 
   private def bindFuncStatement(statement: FuncStatement): BindFuncStatement = {
     val funcName =
-      VariableSymbol(statement.identifier.value,
-                     statement.returnType.paramType.value,
+      VariableSymbol(statement.identifier.text,
+                     statement.returnType.paramType.text,
                      isReadOnly = true)
     val paramsList = for (param <- statement.parameters) yield {
-      VariableSymbol(param.id.value, param.paramType.value, isReadOnly = false)
+      VariableSymbol(param.id.text, param.paramType.text, isReadOnly = false)
     }
 
     scope = BoundScope(this.scope)
@@ -89,14 +94,14 @@ case class Binder(parent: BoundScope) {
     if (body.bindTypeClass != statement.returnType.paramType.value)
       diagnostics.reportFunctionTypeMismatched(
         statement.identifier.span,
-        statement.identifier.value,
-        statement.returnType.paramType.value,
+        statement.identifier.text,
+        statement.returnType.paramType.text,
         body.bindTypeClass)
     val function = BindFuncStatement(funcName, paramsList, body)
     if (!scope.tryDeclare(function))
       diagnostics.reportVariableAlreadyDeclared(
         statement.identifier.span,
-        statement.returnType.paramType.value
+        statement.returnType.paramType.text
       )
 
     function
@@ -104,7 +109,7 @@ case class Binder(parent: BoundScope) {
 
   private def bindForStatement(statement: ForStatement): BindForStatement = {
     val low = bindExpression(statement.low)
-    val variableSymbol = VariableSymbol(statement.identifier.value,
+    val variableSymbol = VariableSymbol(statement.identifier.text,
                                         low.bindTypeClass,
                                         isReadOnly = false)
     scope.tryDeclare(variableSymbol)
@@ -131,7 +136,7 @@ case class Binder(parent: BoundScope) {
 
   private def bindVariableDeclaration(
       statement: VariableDeclarationNode): BindVariableStatement = {
-    val name = statement.identifier.value
+    val name = statement.identifier.text
     val isReadOnly = statement.keyword.tokenType == TokenType.letKeyword
     val initializer = bindExpression(statement.expression)
     val variable = VariableSymbol(name, initializer.bindTypeClass, isReadOnly)
@@ -159,7 +164,7 @@ case class Binder(parent: BoundScope) {
   }
 
   private def bindNameExpression(node: NameNode): BindExpression = {
-    val name = node.identifierToken.value
+    val name = node.identifierToken.text
     if (name == null || name.isEmpty)
       return BindLiteralExpression(0)
     val variable = scope.tryLookup(name)
@@ -171,7 +176,7 @@ case class Binder(parent: BoundScope) {
   }
 
   private def bindAssignmentExpression(node: AssignmentNode): BindExpression = {
-    val name = node.identifierToken.value
+    val name = node.identifierToken.text
     val boundExpression = bindExpression(node.expression)
     val existingVariable = scope.tryLookup(name)
     if (existingVariable == null) {
@@ -191,12 +196,7 @@ case class Binder(parent: BoundScope) {
   }
 
   private def bindLiteralExpression(node: LiteralNode): BindExpression = {
-    val value = node.value.value match {
-      case "true"  => true
-      case "false" => false
-      case x       => x.toDouble
-    }
-    BindLiteralExpression(value)
+    BindLiteralExpression(node.value.value)
   }
 
   private def bindBinaryExpression(node: BinaryNode): BindExpression = {
@@ -211,7 +211,7 @@ case class Binder(parent: BoundScope) {
     if (boundOperator == null) {
       diagnostics.reportUndefinedBinaryOperator(
         node.op.span,
-        node.op.value,
+        node.op.text,
         boundLeft.bindTypeClass,
         boundRight.bindTypeClass
       )
@@ -229,8 +229,8 @@ case class Binder(parent: BoundScope) {
       )
     if (boundOperatorKind == null) {
       diagnostics.reportUndefinedUnaryOperator(
-        node.op.asInstanceOf[Tokens].span,
-        node.op.asInstanceOf[Tokens].value,
+        node.op.asInstanceOf[Token].span,
+        node.op.asInstanceOf[Token].text,
         boundOperand.bindTypeClass
       )
       return boundOperand
@@ -352,7 +352,7 @@ case class BindUnaryExpression(bindType: BoundUnaryOperator,
   override def bindTypeClass: String = bindType.result
 }
 
-case class BindLiteralExpression(value: AnyVal) extends BindExpression {
+case class BindLiteralExpression(value: Any) extends BindExpression {
   override def bindTypeClass: String = value.getClass.getSimpleName
 }
 
@@ -439,20 +439,20 @@ object BoundBinaryOperator {
 
   def getBindType(tokenType: TokenType): BindType.Value = {
     tokenType match {
-      case TokenType.add      => BindType.addition
-      case TokenType.sub      => BindType.subtraction
-      case TokenType.mul      => BindType.multiplication
-      case TokenType.div      => BindType.division
-      case TokenType.pow      => BindType.pow
+      case TokenType.`plusToken`      => BindType.addition
+      case TokenType.`minusToken`      => BindType.subtraction
+      case TokenType.`starToken`      => BindType.multiplication
+      case TokenType.`slashToken`      => BindType.division
+      case TokenType.`hatToken`      => BindType.pow
       case TokenType.mod      => BindType.mod
-      case TokenType.lt       => BindType.lt
-      case TokenType.gt       => BindType.gt
-      case TokenType.lte      => BindType.lte
-      case TokenType.gte      => BindType.gte
-      case TokenType.equal    => BindType.equal
-      case TokenType.notequal => BindType.notequal
-      case TokenType.and      => BindType.and
-      case TokenType.or       => BindType.or
+      case TokenType.`lessToken`       => BindType.lt
+      case TokenType.`greaterToken`       => BindType.gt
+      case TokenType.`lessOrEqualsToken`      => BindType.lte
+      case TokenType.`greaterOrEqualsToken`      => BindType.gte
+      case TokenType.`equalsEqualsToken`    => BindType.equal
+      case TokenType.`bangEqualsToken` => BindType.notequal
+      case TokenType.ampersandToken      => BindType.and
+      case TokenType.`pipeToken`       => BindType.or
     }
   }
 
@@ -494,11 +494,11 @@ object BoundUnaryOperator {
 
   private[this] def unaryOperators: List[BoundUnaryOperator] =
     List(
-      BoundUnaryOperator(TokenType.not, BindType.not, bool, bool),
-      BoundUnaryOperator(TokenType.sub, BindType.negation, double, double),
-      BoundUnaryOperator(TokenType.sub, BindType.negation, int, int),
-      BoundUnaryOperator(TokenType.add, BindType.identity, double, double),
-      BoundUnaryOperator(TokenType.add, BindType.identity, int, int)
+      BoundUnaryOperator(TokenType.tildeToken, BindType.not, bool, bool),
+      BoundUnaryOperator(TokenType.minusToken, BindType.negation, double, double),
+      BoundUnaryOperator(TokenType.minusToken, BindType.negation, int, int),
+      BoundUnaryOperator(TokenType.plusToken, BindType.identity, double, double),
+      BoundUnaryOperator(TokenType.plusToken, BindType.identity, int, int)
     )
 
   def bind(tokenType: TokenType, operand: String): BoundUnaryOperator = {

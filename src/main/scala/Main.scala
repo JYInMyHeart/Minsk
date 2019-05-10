@@ -1,11 +1,16 @@
 
 
+import eval.Compilation
+import parser.SyntaxTree
+import sourceText.SourceText
+import symbol.VariableSymbol
+
 import scala.collection.mutable
 import scala.io.{Source, StdIn}
 
 object Main {
 
-  import Printer._
+  import parser.Printer._
   val variables = new mutable.HashMap[VariableSymbol, Any]()
   var showTree = false
   var previous: Compilation = _
@@ -66,6 +71,7 @@ object Main {
     evalResult(source)
   }
   def main(args: Array[String]): Unit = {
-    loadFile("/test1.xck")
+    loadFile("/test.xck")
+
   }
 }
