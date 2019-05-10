@@ -141,6 +141,10 @@ class Parser(val lexer: Lexer) {
     FuncStatement(func, id, parameters, returnType, body)
   }
 
+//  def parseArrayStatement():ArrayStatement = {
+//
+//  }
+
   def parseStatement(): Statement = {
     current.tokenType match {
       case TokenType.openBraceToken =>

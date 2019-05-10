@@ -25,6 +25,7 @@ case class BlockStatement(openBraceToken: Tokens,
   override def getChildren: List[Ast] = statements
 }
 
+
 case class FuncStatement(funcToken: Tokens,
                          identifier: Tokens,
                          parameters: List[ParamStatement],

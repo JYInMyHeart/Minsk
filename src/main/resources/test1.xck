@@ -2,7 +2,11 @@
 
 
     def f1(a:Integer):Double = {
-        a + 1
+
+        def f2(a:Integer):Double = {
+                a + 3
+        }
+        a + f2(a)
     }
 
     var a = 5
@@ -22,5 +26,5 @@
 
     f1(sum(b) + 2 - 3) / 4 > 5 & 2 > 3
 
-    f1(23)
+    f1(3)
 }
