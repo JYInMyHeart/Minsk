@@ -180,8 +180,9 @@ class Lexer(val sourceText: SourceText) {
             | x == '\r' =>
         readWhiteSpace()
       case _ =>
-        if (Character.isLetter(current))
+        if (Character.isLetter(current)){
           readIdentifierOrKeyword()
+        }
         else if (Character.isWhitespace(current))
           readWhiteSpace()
         else {

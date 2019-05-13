@@ -1,5 +1,7 @@
 {
-var a = 1.0
-a = 3.0
-a = a + 1.0
+
+def f(a:Double):Double = {
+    a + 1
+  }
+  f(3)
 }

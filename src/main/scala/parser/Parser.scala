@@ -65,9 +65,10 @@ class Parser(sourceText: SourceText) {
     Token(kind, current.position, null, null)
   }
 
-  def parseCompilationUnit(): Statement = {
+  def parseCompilationUnit(): CompilationUnit = {
     val statement = parseStatement()
-    CompilationUnit(statement, TokenType.eofToken)
+    val eofToken = eat(TokenType.eofToken)
+    CompilationUnit(statement, eofToken)
   }
 
   def parseBlockStatement(): BlockStatement = {

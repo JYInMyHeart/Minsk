@@ -11,7 +11,7 @@ object Printer {
 
   def prettyPrint(node: Node, indent: String = "", isLast: Boolean = true) {
     var indents = indent
-    val enable = node.getChildren != null
+    val enable = node.getChildren != null && node.getChildren.nonEmpty
     val marker = if (isLast) "└──" else "├──"
 
     colorPrint(BLUE, indent)

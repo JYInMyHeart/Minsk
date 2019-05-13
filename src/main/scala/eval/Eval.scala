@@ -89,7 +89,7 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, Any]) {
         node.value match {
           case i: Double  => i
           case i: Boolean => i
-          case i: Int => i
+          case i: Int => i.toDouble
           case _ =>
             throw new Exception(s"unknown literal type")
         }
