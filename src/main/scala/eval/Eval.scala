@@ -33,7 +33,7 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, Any]) {
       case (BindType.funcStatement,s:BindFuncStatement) =>
         evalFuncStatement(s)
       case _ =>
-        throw new Exception(s"Unexpected statement ${statement.bindTypeClass}")
+        throw new Exception(s"Unexpected statement ${statement.getKind}")
     }
   }
 
@@ -136,10 +136,10 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, Any]) {
         value
       case node:BindFuncCallExpression =>
         val params = for(i <- node.paramList) yield evalExpression(i)
-        for(i <- node.bindFuncStatement.param.indices){
-          variables(node.bindFuncStatement.param(i)) = params(i)
+        for(i <- node.bindFuncStatement.parameters.indices){
+          variables(node.bindFuncStatement.parameters(i)) = params(i)
         }
-        val value = eval(node.bindFuncStatement.body)
+        val value = eval(node.bindFuncStatement.typeSymbol)
         value
       case _ => throw new Exception("unknown node type")
     }

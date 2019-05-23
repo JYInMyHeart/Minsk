@@ -2,9 +2,7 @@ package symbol
 
 import binder.BindStatement
 
-case class VariableSymbol(name: String, varType: String, isReadOnly: Boolean) {}
-
-case class FunctionSymbol(name: VariableSymbol,
-                          parameters: List[VariableSymbol],
-                          returnSymbol: VariableSymbol,
-                          body: BindStatement)
+class VariableSymbol(name: String, val typeSymbol: TypeSymbol, val isReadOnly: Boolean)
+    extends Symbol(name) {
+  override def kind: SymbolKind = SymbolKind.Variable
+}

@@ -153,7 +153,9 @@ class Parser(sourceText: SourceText) {
     eat(annotationToken)
     val paramType = eat(TokenType.typeToken)
     val returnType =
-      ParamStatement(Token(returnKeyword, current.position,current.text,current.value), paramType)
+      ParamStatement(
+        Token(returnKeyword, current.position, current.text, current.value),
+        paramType)
     eat(equalsToken)
     val body = parseStatement()
     FuncStatement(func, id, parameters, returnType, body)
@@ -201,7 +203,8 @@ class Parser(sourceText: SourceText) {
 
   def parseBinaryExpression(parentPrecedence: Int = -1): Expression = {
     var left: Expression = null
-    val unaryOperatorPrecedence = Facts.getUnaryOperatorPrecedence(current.tokenType)
+    val unaryOperatorPrecedence =
+      Facts.getUnaryOperatorPrecedence(current.tokenType)
     if (unaryOperatorPrecedence != -1 && unaryOperatorPrecedence >= parentPrecedence) {
       val operatorToken = nextToken
       val operand = parseBinaryExpression(unaryOperatorPrecedence)
@@ -232,11 +235,15 @@ class Parser(sourceText: SourceText) {
         parseNameExpression()
       case TokenType.numberToken =>
         parseNumberLiteral()
-      case TokenType.funcCallExpression =>
-        parseFuncCallExpression()
       case _ =>
-        parseNameExpression()
+        parseNameOrCallExpression()
     }
+  }
+
+  private def parseNameOrCallExpression(): Expression = {
+    if (peek(0).getKind == identifierToken && peek(1).getKind == openParenthesisToken)
+      return parseCallExpression()
+    parseNameExpression()
   }
 
   private def parseBooleanLiteral(): LiteralNode = {
@@ -262,19 +269,24 @@ class Parser(sourceText: SourceText) {
     LiteralNode(number)
   }
 
-  private def parseFuncCallExpression(): FunctionCallNode = {
-    val id = eat(funcCallExpression)
-    eat(openParenthesisToken)
+  def parseArgument(): List[Expression] = {
     var paramsList = List[Expression]()
-    while (current.tokenType != closeParenthesisToken) {
+    while (current.getKind != closeParenthesisToken && current.getKind != eofToken) {
       val expression = parseExpression()
       paramsList :+= expression
     }
-    eat(closeParenthesisToken)
-    FunctionCallNode(id, paramsList)
+    paramsList
+  }
+
+  private def parseCallExpression(): FunctionCallNode = {
+    val id = eat(identifierToken)
+    eat(TokenType.openParenthesisToken)
+    val arguments = parseArgument()
+    eat(TokenType.closeParenthesisToken)
+    FunctionCallNode(id, arguments)
   }
 }
 
-object Parser{
+object Parser {
   def apply(sourceText: SourceText): Parser = new Parser(sourceText)
 }

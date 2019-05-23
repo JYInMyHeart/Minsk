@@ -1,8 +1,8 @@
 package symbol
 
-abstract class Symbol(name:String) {
+abstract class Symbol(name: String) {
 
-  def kind:SymbolKind
+  def kind: SymbolKind
 
   override def toString: String = name
 }

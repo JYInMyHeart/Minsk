@@ -1,30 +1,30 @@
 package binder
 
 import eval.DiagnosticsBag
-import symbol.VariableSymbol
+import symbol.{FunctionSymbol, VariableSymbol}
 
 import scala.collection.mutable
 
-case class BoundScope(parent: BoundScope) {
+case class BindScope(parent: BindScope) {
   private val variables: mutable.HashMap[String, VariableSymbol] =
     mutable.HashMap()
-  private val functions: mutable.HashMap[String, BindFuncStatement] =
+  private val functions: mutable.HashMap[String, FunctionSymbol] =
     mutable.HashMap()
 
   def tryDeclare(variableSymbol: VariableSymbol): Boolean = {
-    if (variables.contains(variableSymbol.name))
+    if (variables.contains(variableSymbol.typeSymbol.name))
       false
     else {
-      variables += variableSymbol.name -> variableSymbol
+      variables += variableSymbol.typeSymbol.name -> variableSymbol
       true
     }
   }
 
-  def tryDeclare(funcStatement: BindFuncStatement):Boolean = {
-    if(functions.contains(funcStatement.identifier.name))
+  def tryDeclare(funcStatement: FunctionSymbol):Boolean = {
+    if(functions.contains(funcStatement.name))
       false
     else{
-      functions += funcStatement.identifier.name -> funcStatement
+      functions += funcStatement.name -> funcStatement
       true
     }
   }
@@ -37,7 +37,7 @@ case class BoundScope(parent: BoundScope) {
     parent.tryLookup(name)
   }
 
-  def tryLookupFunc(name: String): BindFuncStatement = {
+  def tryLookupFunc(name: String): FunctionSymbol = {
     if (functions.contains(name))
       return functions(name)
     if (parent == null)
@@ -49,7 +49,7 @@ case class BoundScope(parent: BoundScope) {
     variables.values.toList
   }
 
-  def getDeclaredFunctions: List[BindFuncStatement] = {
+  def getDeclaredFunctions: List[FunctionSymbol] = {
     functions.values.toList
   }
 }
@@ -57,5 +57,5 @@ case class BoundScope(parent: BoundScope) {
 case class BoundGlobalScope(previous: BoundGlobalScope,
                             diagnostics: DiagnosticsBag,
                             variables: List[VariableSymbol],
-                            functions:List[BindFuncStatement],
+                            functions:List[FunctionSymbol],
                             statement: BindStatement) {}

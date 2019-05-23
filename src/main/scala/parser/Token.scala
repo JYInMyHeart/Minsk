@@ -15,6 +15,8 @@ class Token(val tokenType: TokenType,
 
   override def getKind: TokenType = tokenType
 
+  def isMissing: Boolean = text == null
+
 
 }
 
@@ -49,5 +51,6 @@ object BindType extends Enumeration {
   val identity, negation, addition, subtraction, multiplication, division, and,
   or, not, pow, mod, lt, lte, gt, gte, equal, notequal, //statement
   blockStatement, expressionStatement, variableDeclaration, ifStatement,
+  literalExpression,assignmentExpression,
   whileStatement, forStatement, funcStatement = Value
 }
