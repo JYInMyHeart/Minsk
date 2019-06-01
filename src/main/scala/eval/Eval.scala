@@ -134,13 +134,13 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, Any]) {
         val value = evalExpression(node.expression)
         variables(node.variable) = value
         value
-      case node:BindFuncCallExpression =>
-        val params = for(i <- node.paramList) yield evalExpression(i)
-        for(i <- node.bindFuncStatement.parameters.indices){
-          variables(node.bindFuncStatement.parameters(i)) = params(i)
-        }
-        val value = eval(node.bindFuncStatement.typeSymbol)
-        value
+//      case node:BindFuncCallExpression =>
+//        val params = for(i <- node.paramList) yield evalExpression(i)
+//        for(i <- node.bindFuncStatement.parameters.indices){
+//          variables(node.bindFuncStatement.parameters(i)) = params(i)
+//        }
+//        val value = eval(node.)
+//        value
       case _ => throw new Exception("unknown node type")
     }
   }

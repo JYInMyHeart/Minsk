@@ -11,7 +11,6 @@ import parser.TokenType.{
   funcKeyword,
   identifierToken,
   letKeyword,
-  literal,
   openParenthesisToken,
   returnKeyword,
   toKeyword,
@@ -288,5 +287,9 @@ class Parser(sourceText: SourceText) {
 }
 
 object Parser {
-  def apply(sourceText: SourceText): Parser = new Parser(sourceText)
+  def apply(sourceText: SourceText): Parser = {
+    val parser = new Parser(sourceText)
+    parser.init()
+    parser
+  }
 }

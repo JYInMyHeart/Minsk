@@ -1,5 +1,5 @@
 import parser.TokenType.TokenType
-import parser.{Facts, TokenType,Parser}
+import parser.{Facts, TokenType, Parser}
 import sourceText.SourceText
 
 import scala.util.Random
@@ -56,7 +56,7 @@ class LexerTest extends UnitSpec {
                 tokenType2: TokenType,
                 text2: String): Boolean = {
     val lexer = Parser(SourceText(text1 + text2))
-    val token1 = lexer.eat(tokenType2)
+    val token1 = lexer.eat(tokenType1)
     val token2 = lexer.eat(tokenType2)
     if (token1.getKind == tokenType1
         && token2.getKind == tokenType2)
@@ -64,33 +64,45 @@ class LexerTest extends UnitSpec {
     false
   }
 
+
+
   def requireSeparator(type1: TokenType, type2: TokenType): Boolean = {
     val t1IsKeyword = type1.toString.endsWith("Keyword")
     val t2IsKeyword = type2.toString.endsWith("Keyword")
 
     (type1, type2, t1IsKeyword, t2IsKeyword) match {
-      case (_, _, true, true)                                 => true
-      case (TokenType.`identifierToken`, _, _, true)                 => true
-      case (_, TokenType.`identifierToken`, true, _)                 => true
-      case (TokenType.literal, _, _, true)                    => true
-      case (_, TokenType.literal, true, _)                    => true
-      case (TokenType.`identifierToken`, TokenType.`identifierToken`, _, _) => true
-      case (TokenType.`identifierToken`, TokenType.literal, _, _)    => true
-      case (TokenType.literal, TokenType.literal, _, _)       => true
-      case (TokenType.`equalsToken`, TokenType.`equalsEqualsToken`, _, _)          => true
-      case (TokenType.`equalsEqualsToken`, TokenType.`equalsEqualsToken`, _, _)           => true
-      case (TokenType.`lessToken`, TokenType.`equalsToken`, _, _)             => true
-      case (TokenType.`lessOrEqualsToken`, TokenType.`equalsToken`, _, _)            => true
-      case (TokenType.`lessToken`, TokenType.`equalsEqualsToken`, _, _)              => true
-      case (TokenType.`greaterToken`, TokenType.`equalsToken`, _, _)             => true
-      case (TokenType.`greaterOrEqualsToken`, TokenType.`equalsToken`, _, _)            => true
-      case (TokenType.`greaterToken`, TokenType.`equalsEqualsToken`, _, _)              => true
-      case (TokenType.`tildeToken`, TokenType.`equalsToken`, _, _)            => true
-      case (TokenType.`tildeToken`, TokenType.`equalsEqualsToken`, _, _)             => true
-      case (TokenType.`equalsToken`, TokenType.`equalsToken`, _, _)         => true
-      case (TokenType.`minusToken`, TokenType.`greaterOrEqualsToken`, _, _)               => true
-      case (TokenType.`minusToken`, TokenType.`greaterToken`, _, _)                => true
-      case _                                                  => false
+      case (_, _, true, true)                        => true
+      case (TokenType.`identifierToken`, _, _, true) => true
+      case (_, TokenType.`identifierToken`, true, _) => true
+      case (TokenType.literal, _, _, true)           => true
+      case (_, TokenType.literal, true, _)           => true
+      case (TokenType.`identifierToken`, TokenType.`identifierToken`, _, _) =>
+        true
+      case (TokenType.`identifierToken`, TokenType.literal, _, _) => true
+      case (TokenType.literal, TokenType.literal, _, _)           => true
+      case (TokenType.`equalsToken`, TokenType.`equalsEqualsToken`, _, _) =>
+        true
+      case (TokenType.`equalsEqualsToken`,
+            TokenType.`equalsEqualsToken`,
+            _,
+            _) =>
+        true
+      case (TokenType.`lessToken`, TokenType.`equalsToken`, _, _) => true
+      case (TokenType.`lessOrEqualsToken`, TokenType.`equalsToken`, _, _) =>
+        true
+      case (TokenType.`lessToken`, TokenType.`equalsEqualsToken`, _, _) => true
+      case (TokenType.`greaterToken`, TokenType.`equalsToken`, _, _)    => true
+      case (TokenType.`greaterOrEqualsToken`, TokenType.`equalsToken`, _, _) =>
+        true
+      case (TokenType.`greaterToken`, TokenType.`equalsEqualsToken`, _, _) =>
+        true
+      case (TokenType.`tildeToken`, TokenType.`equalsToken`, _, _)       => true
+      case (TokenType.`tildeToken`, TokenType.`equalsEqualsToken`, _, _) => true
+      case (TokenType.`equalsToken`, TokenType.`equalsToken`, _, _)      => true
+      case (TokenType.`minusToken`, TokenType.`greaterOrEqualsToken`, _, _) =>
+        true
+      case (TokenType.`minusToken`, TokenType.`greaterToken`, _, _) => true
+      case _                                                        => false
     }
   }
 
@@ -135,19 +147,17 @@ class LexerTest extends UnitSpec {
   }
 
   getTokenPairsWithSeparators.foreach { x =>
-    it should s"be a ${x._1} and ${x._3} ${new Random().nextInt()}" in {
+    it should s"be a ${x._1} and ${x._5} ${new Random().nextInt()}" in {
       val lexer = Parser(SourceText(x._2 + x._4 + x._6))
       val token1 = lexer.eat(x._1)
-      val token2 = lexer.eat(x._3)
       val token3 = lexer.eat(x._5)
       assert(token1.getKind == x._1)
-      assert(token2.getKind == x._3)
       assert(token3.getKind == x._5)
-      assert(token1.value == x._2)
-      assert(token2.value == null)
-      assert(token3.value == x._6)
+      assert(token1.text == x._2)
+      assert(token3.text == x._6)
     }
-
   }
+
+
 
 }
