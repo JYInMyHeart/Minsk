@@ -33,7 +33,7 @@ object TokenType extends Enumeration {
   keyword, func, identifierToken, literal,numberToken, openParenthesisToken, closeParenthesisToken,lmb,rmb,
   equalsToken, equalsEqualsToken,bangToken, bangEqualsToken, lessToken, greaterToken,
   lessOrEqualsToken, greaterOrEqualsToken, plusToken, minusToken, starToken, slashToken,
-  mod, ampersandToken, ampersandAmpersandToken,pipeToken,pipePipeToken, tildeToken, hatToken, whiteSpaceToken, newline,
+  modToken, ampersandToken, ampersandAmpersandToken,pipeToken,pipePipeToken, tildeToken, hatToken, whiteSpaceToken, newline,
   eofToken, wrongToken, stringToken,openBraceToken, closeBraceToken, annotationToken, typeToken,commaToken,
   //keyword
   falseKeyword, trueKeyword, varKeyword, letKeyword, ifKeyword, forKeyword,

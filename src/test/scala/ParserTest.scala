@@ -24,7 +24,7 @@ class ParserTest extends UnitSpec {
     if (op1Precedence >= op2Precedence) {
       val e = AssertingEnumerator(
         AssertingEnumerator.flatten(expression.root).iterator)
-      e.assertNode(TokenType.compilationUnit)
+
       e.assertNode(TokenType.compilationUnit)
       e.assertNode(TokenType.expressionStatement)
       e.assertNode(TokenType.binaryExpression)
@@ -40,7 +40,7 @@ class ParserTest extends UnitSpec {
     } else {
       val e = AssertingEnumerator(
         AssertingEnumerator.flatten(expression.root).iterator)
-      e.assertNode(TokenType.compilationUnit)
+
       e.assertNode(TokenType.compilationUnit)
       e.assertNode(TokenType.expressionStatement)
       e.assertNode(TokenType.binaryExpression)
@@ -67,7 +67,6 @@ class ParserTest extends UnitSpec {
       val e = AssertingEnumerator(
         AssertingEnumerator.flatten(expression.root).iterator)
       e.assertNode(TokenType.compilationUnit)
-      e.assertNode(TokenType.compilationUnit)
       e.assertNode(TokenType.expressionStatement)
       e.assertNode(TokenType.binaryExpression)
       e.assertNode(TokenType.unaryExpression)
@@ -80,7 +79,6 @@ class ParserTest extends UnitSpec {
     } else {
       val e = AssertingEnumerator(
         AssertingEnumerator.flatten(expression.root).iterator)
-      e.assertNode(TokenType.compilationUnit)
       e.assertNode(TokenType.compilationUnit)
       e.assertNode(TokenType.expressionStatement)
       e.assertNode(TokenType.unaryExpression)
@@ -95,15 +93,20 @@ class ParserTest extends UnitSpec {
   }
 
   getBinaryOperatorPairsData.foreach { x =>
-    it should s"be a binaryTree ${new Random().nextInt()}" in {
+    it should s"be a binaryTree ${x._1} and ${x._2}  ${new Random().nextInt()}" in {
       parseBinaryExpressionHonorsPrecedences(x._1, x._2)
     }
   }
 
+//  it should "nice" in {
+//    parseBinaryExpressionHonorsPrecedences(TokenType.equalsEqualsToken,TokenType.modToken)
+//  }
+
   getUnaryOperatorPairsData.foreach { x =>
-    it should s"be a unaryTree ${new Random().nextInt()}" in {
+    it should s"be a unaryTree ${x._1} and ${x._2}  ${new Random().nextInt()}" in {
       parseUnaryExpressionHonorsPrecedences(x._1, x._2)
     }
   }
+
 
 }

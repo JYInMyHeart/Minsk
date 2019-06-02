@@ -47,7 +47,7 @@ class EvaluationTest extends UnitSpec {
     mutable.HashMap[VariableSymbol, Any]()
   var previous: Compilation = _
   evalData.foreach { x =>
-    it should s"${Random.nextInt()}" in {
+    it should s"${x._1} = ${x._2}   ${Random.nextInt()}" in {
       val tree = SyntaxTree.parse(x._1)
       val compilation = Compilation(tree, previous)
       previous = compilation

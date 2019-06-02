@@ -8,8 +8,8 @@ class LexerTest extends UnitSpec {
   val dynamicTokens: List[(TokenType, String)] = List(
     //    (parser.TokenType.keyword,""),
     //      (parser.TokenType.func,""),
-    (TokenType.identifierToken, "a_12"),
-    (TokenType.literal, "1234"),
+    (TokenType.identifierToken, "abc"),
+    (TokenType.numberToken, "1234"),
     (TokenType.eofToken, "\0"),
     (TokenType.falseKeyword, "false"),
     (TokenType.trueKeyword, "true"),
@@ -30,7 +30,7 @@ class LexerTest extends UnitSpec {
       .filter(_._2 != null)
       .toList
 
-  val tokens: List[(TokenType.Value, String)] = fixedTokens
+  val tokens: List[(TokenType.Value, String)] = fixedTokens ++ dynamicTokens
 
   val separators = List(
     (TokenType.whiteSpaceToken, " "),
@@ -42,13 +42,6 @@ class LexerTest extends UnitSpec {
     (TokenType.wrongToken, "@#"),
     (TokenType.identifierToken, "a"),
     (TokenType.identifierToken, "ZCG"),
-    (TokenType.identifierToken, "_12"),
-    (TokenType.identifierToken, "__"),
-    (TokenType.identifierToken, "_a1"),
-    (TokenType.identifierToken, "_ab"),
-    (TokenType.identifierToken, "a_b"),
-    (TokenType.identifierToken, "a_12c"),
-    (TokenType.identifierToken, "a_12"),
   )
 
   def testPairs(tokenType1: TokenType,
@@ -158,6 +151,14 @@ class LexerTest extends UnitSpec {
     }
   }
 
-
+//  it should s"be a fal and " in {
+//    val lexer = Parser(SourceText("false  _12"))
+//    val token1 = lexer.eat(TokenType.falseKeyword)
+//    val token3 = lexer.eat(TokenType.identifierToken)
+//    assert(token1.getKind == TokenType.falseKeyword)
+//    assert(token3.getKind == TokenType.identifierToken)
+//    assert(token1.text == "false")
+//    assert(token3.text == "_12")
+//  }
 
 }

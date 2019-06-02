@@ -475,7 +475,7 @@ object BoundBinaryOperator {
       case TokenType.`starToken`            => BindType.multiplication
       case TokenType.`slashToken`           => BindType.division
       case TokenType.`hatToken`             => BindType.pow
-      case TokenType.mod                    => BindType.mod
+      case TokenType.`modToken`                    => BindType.mod
       case TokenType.`lessToken`            => BindType.lt
       case TokenType.`greaterToken`         => BindType.gt
       case TokenType.`lessOrEqualsToken`    => BindType.lte

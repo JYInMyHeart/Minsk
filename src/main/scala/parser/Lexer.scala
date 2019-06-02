@@ -121,6 +121,9 @@ class Lexer(val sourceText: SourceText) {
       case '^' =>
         kind = TokenType.hatToken
         position += 1
+      case '%' =>
+        kind = TokenType.modToken
+        position += 1
       case '&' =>
         position += 1
         if (current != '&') {

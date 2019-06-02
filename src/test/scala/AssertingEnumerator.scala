@@ -17,7 +17,7 @@ class AssertingEnumerator(enumerator: Iterator[Node]) {
     val current = enumerator.next()
     assert(kind == current.getKind)
     assert(current.isInstanceOf[Token])
-    assert(text == current.asInstanceOf[Token].value)
+    assert(text == current.asInstanceOf[Token].text)
   }
 
 }

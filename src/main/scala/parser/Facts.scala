@@ -20,9 +20,11 @@ object Facts {
       case TokenType.`minusToken`            => "-"
       case TokenType.`starToken`             => "*"
       case TokenType.`slashToken`            => "/"
-      case TokenType.mod                     => "%"
+      case TokenType.`modToken`              => "%"
       case TokenType.ampersandToken          => "&"
+      case TokenType.ampersandAmpersandToken => "&&"
       case TokenType.`pipeToken`             => "|"
+      case TokenType.`pipePipeToken`         => "||"
       case TokenType.`tildeToken`            => "~"
       case TokenType.`hatToken`              => "^"
       case TokenType.`eofToken`              => "\0"
@@ -51,7 +53,7 @@ object Facts {
 
   def getBinaryOperatorKinds: List[TokenType.Value] = {
     val tokenTypes = TokenType.values
-    tokenTypes.filter(getBinaryOperatorPrecedence(_) > 0).toList
+    tokenTypes.filter(x => getBinaryOperatorPrecedence(x) > 0).toList
   }
 
   def getUnaryOperatorPrecedence(tokenType: TokenType): Int =
@@ -66,7 +68,7 @@ object Facts {
         -1
     }
 
-  def getBinaryOperatorPrecedence(tokenType: TokenType): Int = {
+  def getBinaryOperatorPrecedence(tokenType: TokenType.TokenType): Int = {
     tokenType match {
       case x
           if x == TokenType.plusToken
@@ -74,14 +76,9 @@ object Facts {
         4
       case x
           if x == TokenType.slashToken
-            | x == TokenType.mod
-            | x == TokenType.starToken
-            | x == TokenType.hatToken =>
+            | x == TokenType.modToken
+            | x == TokenType.starToken =>
         5
-      case x
-          if x == TokenType.ampersandToken
-            | x == TokenType.pipeToken =>
-        1
       case x
           if x == TokenType.lessToken
             | x == TokenType.lessOrEqualsToken
@@ -90,6 +87,16 @@ object Facts {
             | x == TokenType.equalsEqualsToken
             | x == TokenType.bangEqualsToken =>
         3
+      case x
+          if x == TokenType.ampersandAmpersandToken
+            | x == TokenType.ampersandToken =>
+        2
+      case x
+          if x == TokenType.pipePipeToken
+            | x == TokenType.hatToken
+            | x == TokenType.pipeToken =>
+        1
+
       case _ =>
         -1
     }
