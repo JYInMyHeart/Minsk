@@ -1,6 +1,22 @@
 package eval
 
-import binder.{BindAssignmentExpression, BindBinaryExpression, BindBlockStatement, BindExpression, BindExpressionStatement, BindForStatement, BindFuncCallExpression, BindFuncStatement, BindIfStatement, BindLiteralExpression, BindStatement, BindUnaryExpression, BindVariableExpression, BindVariableStatement, BindWhileStatement}
+import binder.{
+  BindAssignmentExpression,
+  BindBinaryExpression,
+  BindBlockStatement,
+  BindExpression,
+  BindExpressionStatement,
+  BindForStatement,
+  BindFuncCallExpression,
+  BindFuncStatement,
+  BindIfStatement,
+  BindLiteralExpression,
+  BindStatement,
+  BindUnaryExpression,
+  BindVariableExpression,
+  BindVariableStatement,
+  BindWhileStatement
+}
 import parser.BindType
 import symbol._
 
@@ -13,8 +29,6 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, Any]) {
     evalStatement(bindStatement)
     lastValue
   }
-
-
 
   def evalStatement(statement: BindStatement): Unit = {
     (statement.getKind, statement) match {
@@ -30,7 +44,7 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, Any]) {
         evalWhileStatement(s)
       case (BindType.forStatement, s: BindForStatement) =>
         evalForStatement(s)
-      case (BindType.funcStatement,s:BindFuncStatement) =>
+      case (BindType.funcStatement, s: BindFuncStatement) =>
         evalFuncStatement(s)
       case _ =>
         throw new Exception(s"Unexpected statement ${statement.getKind}")
@@ -47,7 +61,6 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, Any]) {
       evalStatement(statement.body)
     }
   }
-
 
   def evalFuncStatement(s: BindFuncStatement): Unit = {
     lastValue = "<Function>"
@@ -89,7 +102,8 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, Any]) {
         node.value match {
           case i: Double  => i
           case i: Boolean => i
-          case i: Int => i.toDouble
+          case i: Int     => i.toDouble
+          case i: String  => i
           case _ =>
             throw new Exception(s"unknown literal type")
         }
@@ -110,10 +124,26 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, Any]) {
           case (l: Double, r: Double, BindType.gte)            => l >= r
           case (l: Double, r: Double, BindType.equal)          => l == r
           case (l: Double, r: Double, BindType.notequal)       => l != r
-          case (l: Boolean, r: Boolean, BindType.and)          => l && r
-          case (l: Boolean, r: Boolean, BindType.or)           => l || r
-          case (l: Boolean, r: Boolean, BindType.equal)        => l == r
-          case (l: Boolean, r: Boolean, BindType.notequal)     => l != r
+
+          case (l: Int, r: Int, BindType.addition)       => l + r
+          case (l: Int, r: Int, BindType.subtraction)    => l - r
+          case (l: Int, r: Int, BindType.multiplication) => l * r
+          case (l: Int, r: Int, BindType.division)       => l / r
+          case (l: Int, r: Int, BindType.pow)            => math.pow(l, r).toInt
+          case (l: Int, r: Int, BindType.mod)            => l % r
+          case (l: Int, r: Int, BindType.lt)             => l < r
+          case (l: Int, r: Int, BindType.lte)            => l <= r
+          case (l: Int, r: Int, BindType.gt)             => l > r
+          case (l: Int, r: Int, BindType.gte)            => l >= r
+          case (l: Int, r: Int, BindType.equal)          => l == r
+          case (l: Int, r: Int, BindType.notequal)       => l != r
+
+          case (l: Boolean, r: Boolean, BindType.and)      => l && r
+          case (l: Boolean, r: Boolean, BindType.or)       => l || r
+          case (l: Boolean, r: Boolean, BindType.equal)    => l == r
+          case (l: Boolean, r: Boolean, BindType.notequal) => l != r
+          case (l: String, r: String, BindType.notequal)   => l != r
+          case (l: String, r: String, BindType.equal)      => l == r
           case _ =>
             throw new Exception(s"unknown literal type")
         }

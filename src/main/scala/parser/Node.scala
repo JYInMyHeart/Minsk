@@ -133,8 +133,6 @@ case class BinaryNode(left: Expression, op: Token, right: Expression)
 
 case class LiteralNode(value: Token) extends Expression {
   override def getKind: TokenType.TokenType = TokenType.numberExpression
-
-
 }
 
 case class BraceNode(left: Expression, op: Expression, right: Expression)

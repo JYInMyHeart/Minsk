@@ -237,7 +237,7 @@ case class Binder(parent: BindScope) {
     val boundOperatorKind =
       BoundUnaryOperator.bind(
         node.op.getKind,
-        boundOperand.getType.name
+        boundOperand.getType
       )
     if (boundOperatorKind == null) {
       diagnostics.reportUndefinedUnaryOperator(
@@ -348,7 +348,7 @@ case class BindBinaryExpression(bindType: BoundBinaryOperator,
                                 boundLeft: BindExpression,
                                 boundRight: BindExpression)
     extends BindExpression {
-  override def getType: TypeSymbol = boundLeft.getType
+  override def getType: TypeSymbol = bindType.result
 
   override def getKind: BindType = bindType.bindType
 }
@@ -475,7 +475,7 @@ object BoundBinaryOperator {
       case TokenType.`starToken`            => BindType.multiplication
       case TokenType.`slashToken`           => BindType.division
       case TokenType.`hatToken`             => BindType.pow
-      case TokenType.`modToken`                    => BindType.mod
+      case TokenType.`modToken`             => BindType.mod
       case TokenType.`lessToken`            => BindType.lt
       case TokenType.`greaterToken`         => BindType.gt
       case TokenType.`lessOrEqualsToken`    => BindType.lte
@@ -547,7 +547,7 @@ object BoundUnaryOperator {
                          TypeSymbol.Int)
     )
 
-  def bind(tokenType: TokenType, operand: String): BoundUnaryOperator = {
+  def bind(tokenType: TokenType, operand: TypeSymbol): BoundUnaryOperator = {
     val unaryOperator = unaryOperators.filter(x =>
       x.tokenType == tokenType && x.operand == operand)
     if (unaryOperator.nonEmpty)

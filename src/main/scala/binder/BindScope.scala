@@ -12,10 +12,10 @@ case class BindScope(parent: BindScope) {
     mutable.HashMap()
 
   def tryDeclare(variableSymbol: VariableSymbol): Boolean = {
-    if (variables.contains(variableSymbol.typeSymbol.name))
+    if (variables.contains(variableSymbol.name))
       false
     else {
-      variables += variableSymbol.typeSymbol.name -> variableSymbol
+      variables += variableSymbol.name -> variableSymbol
       true
     }
   }

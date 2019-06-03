@@ -78,6 +78,11 @@ class Lexer(val sourceText: SourceText) {
     val length = position - start
     val text = sourceText.toString(start, start + length)
     kind = Facts.getKeywordType(text)
+    value = text match {
+      case "true" => true
+      case "false" => false
+      case _@v => v
+    }
   }
 
   def lex(): Token = {
