@@ -172,7 +172,7 @@ case class VariableDeclarationNode(keyword: Token,
 
 }
 
-case class FunctionCallNode(identifier: Token, expressions: List[Expression])
+case class FunctionCallNode(identifier: Token, arguments: List[Expression])
     extends Expression {
   override def getKind: TokenType = TokenType.funcCallExpression
 

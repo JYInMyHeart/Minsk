@@ -52,6 +52,6 @@ object BindType extends Enumeration {
   val identity, negation, addition, subtraction, multiplication, division, and,
   or, not, pow, mod, lt, lte, gt, gte, equal, notequal, //statement
   blockStatement, expressionStatement, variableDeclaration, ifStatement,
-  literalExpression,assignmentExpression,
+  literalExpression,assignmentExpression,errorExpression,conversionExpression,
   whileStatement, forStatement, funcStatement = Value
 }

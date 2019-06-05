@@ -19,6 +19,11 @@ object Diagnostics {
 }
 
 class DiagnosticsBag {
+  def reportUndefinedFunction(span: TextSpan, text: String) = {
+    val msg = s"Function $text was undefined at $span"
+    report(span,msg)
+  }
+
   def reportUnterminatedString(span: TextSpan): Unit = {
     val msg = s"unterminated string at $span"
     report(span,msg)
@@ -44,8 +49,8 @@ class DiagnosticsBag {
     report(span, msg)
   }
   def reportCannotConvert(span: TextSpan,
-                          bindTypeClass: String,
-                          varType: String): Unit = {
+                          bindTypeClass: TypeSymbol,
+                          varType: TypeSymbol): Unit = {
     val msg =
       s"Cannot convert variable from $varType to $bindTypeClass at $span."
     report(span, msg)
@@ -98,9 +103,15 @@ class DiagnosticsBag {
     report(span, msg)
   }
 
-  def reportFunctionTypeMismatched(span: TextSpan,  funcName:String,actualType: String,
-                                   expectedType: String): Unit = {
+  def reportFunctionTypeMismatched(span: TextSpan,  funcName:String,actualType: TypeSymbol,
+                                   expectedType: TypeSymbol): Unit = {
     val msg = s"Function $funcName expect $expectedType but got $expectedType at $span"
+    report(span, msg)
+  }
+
+  def reportFunctionParametersLengthMismatched(span: TextSpan,  funcName:String,funcParamLen: Int,
+                                               realParamLen: Int): Unit = {
+    val msg = s"Function $funcName expect parameters length is $funcParamLen but got $realParamLen at $span"
     report(span, msg)
   }
 

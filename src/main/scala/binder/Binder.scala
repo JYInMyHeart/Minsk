@@ -39,21 +39,57 @@ case class Binder(parent: BindScope) {
                      targetType: TypeSymbol): BindExpression = {
     val res = bindExpression(expression)
     if (res.getType != targetType)
-      diagnostics.reportCannotConvert(null, res.getType.name, targetType.name)
+      diagnostics.reportCannotConvert(null, res.getType, targetType)
     res
   }
 
-  def bindFuncCallExpression(n: FunctionCallNode): BindFuncCallExpression = {
-    val name = n.identifier.text
-    val function = scope.tryLookupFunc(name)
-
-    if (function.parameters.length != n.expressions.length) {
-      diagnostics.reportParamMismatch(n.identifier.span,
-                                      function.parameters,
-                                      n.expressions)
+  def bindConversion(typeSymbol: TypeSymbol,
+                     expression: Expression): BindExpression = {
+    val expr = bindExpression(expression)
+    val conversion = Conversion.classify(expr.getType, typeSymbol)
+    if (!conversion.exists) {
+      diagnostics.reportCannotConvert(expression.getSpan,
+                                      expr.getType,
+                                      typeSymbol)
+      return BindErrorExpression()
     }
-    BindFuncCallExpression(function,
-                           for (i <- n.expressions) yield bindExpression(i))
+    BindConversionExpression(typeSymbol, expr)
+  }
+
+  def bindFuncCallExpression(n: FunctionCallNode): BindExpression = {
+    val typeSymbol = Binder.lookupType(n.identifier.text)
+    if (n.arguments.length == 1 && typeSymbol != null) {
+      bindConversion(typeSymbol, n.arguments.head)
+      return BindErrorExpression()
+    }
+    val bindArguments = n.arguments.map(bindExpression)
+    val functionSymbol = scope.tryLookupFunc(n.identifier.text)
+    if (functionSymbol == null) {
+      diagnostics.reportUndefinedFunction(n.identifier.getSpan,
+                                          n.identifier.text)
+      return BindErrorExpression()
+    }
+    if (n.arguments.length != functionSymbol.parameters.length) {
+      diagnostics.reportFunctionParametersLengthMismatched(
+        n.getSpan,
+        functionSymbol.name,
+        functionSymbol.parameters.length,
+        n.arguments.length)
+      return BindErrorExpression()
+    }
+    for (i <- bindArguments.indices) {
+      val argument = bindArguments(i)
+      val parameter = functionSymbol.parameters(i)
+
+      if (argument.getType != parameter.typeSymbol) {
+        diagnostics.reportFunctionTypeMismatched(n.getSpan,
+                                                 functionSymbol.name,
+                                                 argument.getType,
+                                                 parameter.typeSymbol)
+        return BindErrorExpression()
+      }
+    }
+    BindFuncCallExpression(functionSymbol, bindArguments)
   }
 
   def bindExpression(tree: Expression): BindExpression = {
@@ -200,8 +236,8 @@ case class Binder(parent: BindScope) {
 
     if (boundExpression.getType != existingVariable.typeSymbol) {
       diagnostics.reportCannotConvert(node.equalsToken.span,
-                                      boundExpression.getType.name,
-                                      existingVariable.typeSymbol.name)
+                                      boundExpression.getType,
+                                      existingVariable.typeSymbol)
       return boundExpression
     }
     BindAssignmentExpression(existingVariable, boundExpression)
@@ -252,6 +288,16 @@ case class Binder(parent: BindScope) {
 }
 
 object Binder {
+  def lookupType(name: String): TypeSymbol = {
+    name match {
+      case "int"    => TypeSymbol.Int
+      case "bool"   => TypeSymbol.Bool
+      case "double" => TypeSymbol.Double
+      case "string" => TypeSymbol.String
+      case _        => null
+    }
+  }
+
   def bindGlobalScope(previous: BoundGlobalScope,
                       syntax: CompilationUnit): BoundGlobalScope = {
     val parentScope = createParentScope(previous)
@@ -365,6 +411,7 @@ case class BindLiteralExpression(value: Any) extends BindExpression {
     value match {
       case _: Boolean => TypeSymbol.Bool
       case _: Int     => TypeSymbol.Int
+      case _: Double  => TypeSymbol.Double
       case _: String  => TypeSymbol.String
       case _ =>
         throw new Exception(
@@ -403,6 +450,20 @@ case class BindFuncCallExpression(bindFuncStatement: FunctionSymbol,
   override def getKind: BindType = BindType.funcStatement
 
   override def getType: TypeSymbol = bindFuncStatement.typeSymbol
+}
+
+case class BindErrorExpression() extends BindExpression {
+  override def getType: TypeSymbol = TypeSymbol.Error
+
+  override def getKind: BindType = BindType.errorExpression
+}
+
+case class BindConversionExpression(typeSymbol: TypeSymbol,
+                                    bindExpression: BindExpression)
+    extends BindExpression {
+  override def getType: TypeSymbol = typeSymbol
+
+  override def getKind: BindType = BindType.conversionExpression
 }
 
 object BoundBinaryOperator {
@@ -555,4 +616,5 @@ object BoundUnaryOperator {
     else
       null
   }
+
 }
