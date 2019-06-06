@@ -4,7 +4,7 @@ import eval.DiagnosticsBag
 import parser.BindType.BindType
 import parser.TokenType.TokenType
 import parser._
-import symbol.{FunctionSymbol, TypeSymbol, VariableSymbol}
+import symbol.{BuiltinFunctions, FunctionSymbol, TypeSymbol, VariableSymbol}
 
 import scala.collection.mutable
 
@@ -318,7 +318,7 @@ object Binder {
       stack.push(pre)
       pre = pre.previous
     }
-    var parent: BindScope = null
+    var parent: BindScope = createRootScope()
     while (stack.nonEmpty) {
       pre = stack.pop()
       val scope = BindScope(parent)
@@ -327,6 +327,13 @@ object Binder {
       parent = scope
     }
     parent
+  }
+
+
+  private def createRootScope(): BindScope = {
+    val result = BindScope(null)
+    BuiltinFunctions.getAll.foreach(result.tryDeclare)
+    result
   }
 }
 
@@ -415,7 +422,7 @@ case class BindLiteralExpression(value: Any) extends BindExpression {
       case _: String  => TypeSymbol.String
       case _ =>
         throw new Exception(
-          s"Unexpected literal '${value}' of type ${value.getClass}");
+          s"Unexpected literal '$value' of type ${value.getClass}");
 
     }
   }
@@ -444,12 +451,12 @@ case class BindAssignmentExpression(variable: VariableSymbol,
   override def getKind: BindType = BindType.assignmentExpression
 }
 
-case class BindFuncCallExpression(bindFuncStatement: FunctionSymbol,
+case class BindFuncCallExpression(functionSymbol: FunctionSymbol,
                                   paramList: List[BindExpression])
     extends BindExpression {
   override def getKind: BindType = BindType.funcStatement
 
-  override def getType: TypeSymbol = bindFuncStatement.typeSymbol
+  override def getType: TypeSymbol = functionSymbol.typeSymbol
 }
 
 case class BindErrorExpression() extends BindExpression {

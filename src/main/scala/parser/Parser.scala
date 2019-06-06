@@ -230,8 +230,8 @@ class Parser(sourceText: SourceText) {
         parseParenthesizedExpression()
       case x if x == TokenType.trueKeyword || x == TokenType.falseKeyword =>
         parseBooleanLiteral()
-      case TokenType.`identifierToken` =>
-        parseNameExpression()
+      case TokenType.`stringToken` =>
+        parseStringLiteral()
       case TokenType.numberToken =>
         parseNumberLiteral()
       case _ =>
@@ -266,6 +266,11 @@ class Parser(sourceText: SourceText) {
   private def parseNumberLiteral(): LiteralNode = {
     val number = eat(numberToken)
     LiteralNode(number)
+  }
+
+  private def parseStringLiteral():LiteralNode = {
+    val stringToken = eat(TokenType.stringToken)
+    LiteralNode(stringToken)
   }
 
   def parseArgument(): List[Expression] = {

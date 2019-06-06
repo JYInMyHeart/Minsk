@@ -10,6 +10,9 @@ class Token(val tokenType: TokenType,
     extends Expression {
 
   def span = TextSpan(position,text.length)
+
+  override def getSpan: TextSpan = span
+
   override def toString: String =
     s"<$tokenType :$text >  $span"
 

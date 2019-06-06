@@ -1,6 +1,5 @@
 package symbol
 
-import java.lang.reflect.Field
 
 object BuiltinFunctions {
   val mPrint: FunctionSymbol = new FunctionSymbol(
@@ -9,7 +8,7 @@ object BuiltinFunctions {
     TypeSymbol.Void)
   val input: FunctionSymbol =
     new FunctionSymbol("input", List(), TypeSymbol.String)
-  val print: FunctionSymbol = new FunctionSymbol(
+  val rnd: FunctionSymbol = new FunctionSymbol(
     "rnd",
     List(new ParameterSymbol("max", TypeSymbol.Int)),
     TypeSymbol.Int)

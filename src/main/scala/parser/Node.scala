@@ -108,8 +108,7 @@ case class SyntaxTree(diagnostics: DiagnosticsBag, root: CompilationUnit)
 object SyntaxTree {
   def parse(text: String): SyntaxTree = {
     val sourceText = SourceText(text)
-    val parser = new Parser(sourceText)
-    parser.init()
+    val parser = Parser(sourceText)
     val expr = parser.parseCompilationUnit()
     SyntaxTree(parser.diagnostics, expr)
   }

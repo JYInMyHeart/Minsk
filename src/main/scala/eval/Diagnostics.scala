@@ -105,7 +105,7 @@ class DiagnosticsBag {
 
   def reportFunctionTypeMismatched(span: TextSpan,  funcName:String,actualType: TypeSymbol,
                                    expectedType: TypeSymbol): Unit = {
-    val msg = s"Function $funcName expect $expectedType but got $expectedType at $span"
+    val msg = s"Function $funcName expect $expectedType but got $actualType at $span"
     report(span, msg)
   }
 

@@ -4,6 +4,7 @@ import binder.{
   BindAssignmentExpression,
   BindBinaryExpression,
   BindBlockStatement,
+  BindConversionExpression,
   BindExpression,
   BindExpressionStatement,
   BindForStatement,
@@ -21,6 +22,8 @@ import parser.BindType
 import symbol._
 
 import scala.collection.mutable
+import scala.io.StdIn
+import scala.util.Random
 
 class Eval(val variables: mutable.HashMap[VariableSymbol, Any]) {
   private var lastValue: Any = _
@@ -44,8 +47,6 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, Any]) {
         evalWhileStatement(s)
       case (BindType.forStatement, s: BindForStatement) =>
         evalForStatement(s)
-      case (BindType.funcStatement, s: BindFuncStatement) =>
-        evalFuncStatement(s)
       case _ =>
         throw new Exception(s"Unexpected statement ${statement.getKind}")
     }
@@ -164,13 +165,30 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, Any]) {
         val value = evalExpression(node.expression)
         variables(node.variable) = value
         value
-//      case node:BindFuncCallExpression =>
-//        val params = for(i <- node.paramList) yield evalExpression(i)
-//        for(i <- node.bindFuncStatement.parameters.indices){
-//          variables(node.bindFuncStatement.parameters(i)) = params(i)
-//        }
-//        val value = eval(node.)
-//        value
+      case node: BindFuncCallExpression =>
+        node.functionSymbol match {
+          case BuiltinFunctions.input => StdIn.readLine()
+          case BuiltinFunctions.mPrint =>
+            val msg = evalExpression(node.paramList.head)
+            println(msg)
+            null
+          case BuiltinFunctions.rnd =>
+            val max = evalExpression(node.paramList.head)
+            Random.nextInt(max.asInstanceOf[Double].toInt)
+          case _ =>
+            throw new Exception(s"Unexpected function ${node.functionSymbol}")
+        }
+      case node: BindConversionExpression =>
+        val value = evalExpression(node.bindExpression)
+        node.typeSymbol match {
+          case TypeSymbol.Bool   => value.asInstanceOf[Boolean]
+          case TypeSymbol.Int    => value.asInstanceOf[Int]
+          case TypeSymbol.Double => value.asInstanceOf[Double]
+          case TypeSymbol.String => value.asInstanceOf[String]
+          case _ =>
+            throw new Exception(s"Unexpected type ${node.typeSymbol}")
+        }
+
       case _ => throw new Exception("unknown node type")
     }
   }
