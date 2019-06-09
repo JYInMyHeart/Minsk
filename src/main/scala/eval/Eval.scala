@@ -39,9 +39,9 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, Any]) {
     val start = evalExpression(statement.initializer)
     val end = evalExpression(statement.upper)
     for (i <- start
-           .asInstanceOf[Double]
-           .toInt to end.asInstanceOf[Double].toInt) {
-      variables(statement.variable) = i.toDouble
+           .asInstanceOf[Int]
+            to end.asInstanceOf[Int]) {
+      variables(statement.variable) = i
       evalStatement(statement.body)
     }
   }
@@ -165,7 +165,7 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, Any]) {
           case (o: Boolean, BindType.not)     => !o
           case (o: Int, BindType.negation)    => -o
           case (o: Double, BindType.negation) => -o
-          case (o: Int, BindType.identity)    => -o
+          case (o: Int, BindType.identity)    => o
           case (o: Double, BindType.identity) => o
           case _                              => throw new Exception("unknown node type")
         }
