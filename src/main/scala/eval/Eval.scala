@@ -1,23 +1,6 @@
 package eval
 
-import binder.{
-  BindAssignmentExpression,
-  BindBinaryExpression,
-  BindBlockStatement,
-  BindConversionExpression,
-  BindExpression,
-  BindExpressionStatement,
-  BindForStatement,
-  BindFuncCallExpression,
-  BindFuncStatement,
-  BindIfStatement,
-  BindLiteralExpression,
-  BindStatement,
-  BindUnaryExpression,
-  BindVariableExpression,
-  BindVariableStatement,
-  BindWhileStatement
-}
+import binder._
 import parser.BindType
 import symbol._
 
@@ -103,7 +86,7 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, Any]) {
         node.value match {
           case i: Double  => i
           case i: Boolean => i
-          case i: Int     => i.toDouble
+          case i: Int     => i
           case i: String  => i
           case _ =>
             throw new Exception(s"unknown literal type")
@@ -115,8 +98,8 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, Any]) {
         (left, right, op) match {
           case (l: Double, r: Double, BindType.addition)       => l + r
           case (l: Double, r: Double, BindType.subtraction)    => l - r
-          case (l: Double, r: Double, BindType.multiplication) => l.toDouble * r
-          case (l: Double, r: Double, BindType.division)       => l.toDouble / r
+          case (l: Double, r: Double, BindType.multiplication) => l * r
+          case (l: Double, r: Double, BindType.division)       => l / r
           case (l: Double, r: Double, BindType.pow)            => math.pow(l, r)
           case (l: Double, r: Double, BindType.mod)            => l % r
           case (l: Double, r: Double, BindType.lt)             => l < r
@@ -125,6 +108,32 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, Any]) {
           case (l: Double, r: Double, BindType.gte)            => l >= r
           case (l: Double, r: Double, BindType.equal)          => l == r
           case (l: Double, r: Double, BindType.notequal)       => l != r
+
+          case (l: Int, r: Double, BindType.addition)       => l + r
+          case (l: Int, r: Double, BindType.subtraction)    => l - r
+          case (l: Int, r: Double, BindType.multiplication) => l * r
+          case (l: Int, r: Double, BindType.division)       => l / r
+          case (l: Int, r: Double, BindType.pow)            => math.pow(l, r)
+          case (l: Int, r: Double, BindType.mod)            => l % r
+          case (l: Int, r: Double, BindType.lt)             => l < r
+          case (l: Int, r: Double, BindType.lte)            => l <= r
+          case (l: Int, r: Double, BindType.gt)             => l > r
+          case (l: Int, r: Double, BindType.gte)            => l >= r
+          case (l: Int, r: Double, BindType.equal)          => l == r
+          case (l: Int, r: Double, BindType.notequal)       => l != r
+
+          case (l: Double, r: Int, BindType.addition)       => l + r
+          case (l: Double, r: Int, BindType.subtraction)    => l - r
+          case (l: Double, r: Int, BindType.multiplication) => l * r
+          case (l: Double, r: Int, BindType.division)       => l / r
+          case (l: Double, r: Int, BindType.pow)            => math.pow(l, r)
+          case (l: Double, r: Int, BindType.mod)            => l % r
+          case (l: Double, r: Int, BindType.lt)             => l < r
+          case (l: Double, r: Int, BindType.lte)            => l <= r
+          case (l: Double, r: Int, BindType.gt)             => l > r
+          case (l: Double, r: Int, BindType.gte)            => l >= r
+          case (l: Double, r: Int, BindType.equal)          => l == r
+          case (l: Double, r: Int, BindType.notequal)       => l != r
 
           case (l: Int, r: Int, BindType.addition)       => l + r
           case (l: Int, r: Int, BindType.subtraction)    => l - r
@@ -145,6 +154,7 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, Any]) {
           case (l: Boolean, r: Boolean, BindType.notequal) => l != r
           case (l: String, r: String, BindType.notequal)   => l != r
           case (l: String, r: String, BindType.equal)      => l == r
+          case (l: String, r: String, BindType.addition)   => l + r
           case _ =>
             throw new Exception(s"unknown literal type")
         }

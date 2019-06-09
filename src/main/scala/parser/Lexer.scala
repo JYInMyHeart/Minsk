@@ -51,18 +51,25 @@ class Lexer(val sourceText: SourceText) {
   }
 
   def readNumber(): Unit = {
-    while (Character.isDigit(current)) position += 1
+    var floatFlag = false
+    while (Character.isDigit(current) || (!floatFlag && current == '.')) {
+      if(current == '.')
+        floatFlag = true
+      position += 1
+    }
     val length = position - start
     val text = sourceText.toString(start, start + length)
     try {
-      text.toInt
+      if(text.contains('.'))
+        value = text.toDouble
+      else
+        value =  text.toInt
     } catch {
       case _: Exception =>
         diagnostics.reportInvalidNumber(TextSpan(start, length),
                                         text,
                                         TypeSymbol.Int)
     }
-    value = text.toInt
     kind = TokenType.numberToken
   }
 
