@@ -64,7 +64,83 @@ class Parser(sourceText: SourceText) {
     Token(kind, current.position, null, null)
   }
 
+  def parseGlobalStatement(): GlobalStatementNode = {
+    val statement = parseStatement()
+    GlobalStatementNode(statement)
+  }
+
+  def parseTypeClause():TypeClauseNode = {
+    val colonToken = eat(TokenType.colonToken)
+    val identifier = eat(identifierToken)
+    TypeClauseNode(colonToken,identifier)
+  }
+
+  def parseOptionalTypeClause():TypeClauseNode = current.getKind match {
+    case TokenType.colonToken => parseTypeClause()
+    case _ => null
+  }
+
+  def parseParameter(): ParameterNode = {
+    val identifier = eat(identifierToken)
+    val parameterType = parseTypeClause()
+    ParameterNode(identifier,parameterType)
+  }
+
+  def parseParameterList():List[ParameterNode] = {
+    val nodesAndSeparators = ListBuffer[ParameterNode]()
+    var parseNextParameter = true
+    while(parseNextParameter
+      && current.getKind != closeParenthesisToken
+    && current.getKind != eofToken){
+      val parameter = parseParameter()
+      nodesAndSeparators += parameter
+      if(current.getKind == commaToken){
+        eat(commaToken)
+      }else{
+        parseNextParameter = false
+      }
+    }
+    nodesAndSeparators.toList
+  }
+
+
+  def parseFunctionDeclaration(): Member = {
+    val functionKeyword = eat(TokenType.funcKeyword)
+    val identifier = eat(TokenType.identifierToken)
+    val openParenthesisToken = eat(TokenType.openParenthesisToken)
+    val parameters = parseParameterList()
+    val closeParenthesisToken = eat(TokenType.closeParenthesisToken)
+    val functionType = parseOptionalTypeClause()
+    val body = parseBlockStatement()
+    FunctionDeclarationNode(functionKeyword,identifier
+    ,openParenthesisToken,
+      parameters,
+      closeParenthesisToken,
+      functionType,
+      body)
+  }
+
+  def parseMember():Member = current.getKind match {
+    case TokenType.funcKeyword =>
+      parseFunctionDeclaration()
+    case _ =>
+      parseGlobalStatement()
+  }
+
+  def parseMembers(): ListBuffer[Member] = {
+    val members = ListBuffer[Member]()
+    while(current.getKind != TokenType.eofToken){
+      val startToekn = current
+      val member = parseMember()
+      members += member
+      if(current == startToekn)
+        nextToken
+    }
+    members
+  }
+
   def parseCompilationUnit(): CompilationUnit = {
+    val members = parseMembers()
     val statement = parseStatement()
     val eofToken = eat(TokenType.eofToken)
     CompilationUnit(statement, eofToken)

@@ -28,7 +28,7 @@ object Facts {
       case TokenType.`tildeToken`            => "~"
       case TokenType.`hatToken`              => "^"
       case TokenType.`eofToken`              => "\0"
-      case TokenType.annotationToken         => ":"
+      case TokenType.colonToken         => ":"
       case TokenType.openBraceToken          => "{"
       case TokenType.closeBraceToken         => "}"
       case TokenType.falseKeyword            => "false"

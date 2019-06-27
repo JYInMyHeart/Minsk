@@ -4,13 +4,62 @@ import eval.DiagnosticsBag
 import parser.BindType.BindType
 import parser.TokenType.TokenType
 import parser._
-import symbol.{BuiltinFunctions, FunctionSymbol, TypeSymbol, VariableSymbol}
+import symbol.{BuiltinFunctions, FunctionSymbol, ParameterSymbol, TypeSymbol, VariableSymbol}
 
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
-case class Binder(parent: BindScope) {
+case class Binder(parent: BindScope,
+                  function:FunctionSymbol) {
+
+  def lookupTyoe(name: String): TypeSymbol = name match {
+    case "bool" =>
+      TypeSymbol.Bool
+    case "int" =>
+      TypeSymbol.Int
+    case "String" =>
+      TypeSymbol.String
+    case _ => null
+  }
+
+  def bindTypeClause(node: TypeClauseNode):TypeSymbol = {
+    if(node == null) return null
+    val functionType = lookupTyoe(node.identifier.text)
+    if(functionType == null)
+      diagnostics.reportUndefinedType(node.identifier.text,node.identifier.getSpan)
+    functionType
+  }
+
+  def bindFunctionDeclaration(node: FunctionDeclarationNode): Unit = {
+    val parameters = ListBuffer[ParameterSymbol]()
+    val seenParameterNames = mutable.HashSet[String]()
+    for(parameterNode <- node.parameters){
+      val parameterName = parameterNode.identifier.text
+      val parameterType = bindTypeClause(parameterNode.parameterType)
+      if(!seenParameterNames.add(parameterName)){
+        diagnostics.reportParameterAlreadyDeclared(parameterNode.getSpan,parameterName)
+      }else{
+        val parameter = ParameterSymbol(parameterName,parameterType)
+        parameters += parameter
+      }
+    }
+    val bindType = bindTypeClause(node.functionType)
+    val functionType = if(bindType == null) TypeSymbol.Void else bindType
+    val declaredFuntion = new FunctionSymbol(node.identifier.text,parameters.toList,functionType)
+    if(!scope.tryDeclare(declaredFuntion))
+      diagnostics.reportFunctionAlreadyDeclared(node.identifier.span,declaredFuntion.name)
+  }
+
   val diagnostics: DiagnosticsBag = DiagnosticsBag()
   var scope: BindScope = BindScope(parent)
+  var _function:FunctionSymbol = initFunction
+
+  def initFunction:FunctionSymbol = {
+    if(function != null)
+      for(p <- function.parameters)
+        scope.tryDeclare(p)
+    function
+  }
 
   def bindStatement(statement: Statement): BindStatement = {
     (statement.getKind, statement) match {
@@ -19,7 +68,7 @@ case class Binder(parent: BindScope) {
       case (TokenType.expressionStatement, s: ExpressionStatement) =>
         bindExpressionStatement(s)
       case (TokenType.`compilationUnit`, s: CompilationUnit) =>
-        bindStatement(s.statement)
+        bindStatement(s)
       case (TokenType.variableDeclaration, s: VariableDeclarationNode) =>
         bindVariableDeclaration(s)
       case (TokenType.ifStatement, s: IfStatement) =>
@@ -63,7 +112,7 @@ case class Binder(parent: BindScope) {
       return BindErrorExpression()
     }
     val bindArguments = n.arguments.map(bindExpression)
-    val functionSymbol = scope.tryLookupFunc(n.identifier.text)
+    val functionSymbol = scope.tryLookupFunction(n.identifier.text)
     if (functionSymbol == null) {
       diagnostics.reportUndefinedFunction(n.identifier.getSpan,
                                           n.identifier.text)
@@ -215,7 +264,7 @@ case class Binder(parent: BindScope) {
     val name = node.identifierToken.text
     if (name == null || name.isEmpty)
       return BindLiteralExpression(0)
-    val variable = scope.tryLookup(name)
+    val variable = scope.tryLookupVariable(name)
     if (variable == null) {
       diagnostics.reportUndefinedName(node.identifierToken.span, name)
       return BindLiteralExpression(0)
@@ -226,7 +275,7 @@ case class Binder(parent: BindScope) {
   private def bindAssignmentExpression(node: AssignmentNode): BindExpression = {
     val name = node.identifierToken.text
     val boundExpression = bindExpression(node.expression)
-    val existingVariable = scope.tryLookup(name)
+    val existingVariable = scope.tryLookupVariable(name)
     if (existingVariable == null) {
       diagnostics.reportUndefinedName(node.identifierToken.span, name)
       return boundExpression
@@ -301,14 +350,21 @@ object Binder {
   def bindGlobalScope(previous: BoundGlobalScope,
                       syntax: CompilationUnit): BoundGlobalScope = {
     val parentScope = createParentScope(previous)
-    val binder = Binder(parentScope)
-    val expression = binder.bindStatement(syntax.statement)
+    val binder = Binder(parentScope,null)
+    for(function <- syntax.members){
+      binder.bindFunctionDeclaration(function.asInstanceOf[FunctionDeclarationNode])
+    }
+    val statements = ListBuffer[BindStatement]()
+    for(globalStatement <- syntax.members){
+      val statement = binder.bindStatement(globalStatement.asInstanceOf[GlobalStatementNode].statement)
+      statements += statement
+    }
     val variables = binder.scope.getDeclaredVariables
     val functions = binder.scope.getDeclaredFunctions
     val diagnostics = binder.diagnostics
     if (previous != null)
       diagnostics concat previous.diagnostics
-    BoundGlobalScope(previous, diagnostics, variables, functions, expression)
+    BoundGlobalScope(previous, diagnostics, variables, functions, statements.toList)
   }
 
   def createParentScope(previous: BoundGlobalScope): BindScope = {

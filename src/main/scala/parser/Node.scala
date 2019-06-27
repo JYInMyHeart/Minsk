@@ -3,6 +3,7 @@ package parser
 import eval.DiagnosticsBag
 import parser.TokenType.TokenType
 import sourceText.{SourceText, TextSpan}
+import symbol.TypeSymbol
 
 import scala.collection.mutable.ListBuffer
 
@@ -103,6 +104,10 @@ case class WhileStatement(whileToken: Token,
 
 }
 
+case class GlobalStatementNode(statement:Statement) extends Member{
+  override def getKind: TokenType = TokenType.globalStatement
+}
+
 case class SyntaxTree(diagnostics: DiagnosticsBag, root: CompilationUnit)
 
 object SyntaxTree {
@@ -114,12 +119,14 @@ object SyntaxTree {
   }
 }
 
-case class CompilationUnit(statement: Statement, eof: Token)
+case class CompilationUnit(members: List[Member], eof: Token)
     extends Statement {
   override def getKind: TokenType.TokenType = TokenType.compilationUnit
 
-  override def toString: String = s"ExpressionTree:$statement"
+  override def toString: String = s"ExpressionTree:$members"
 }
+abstract class Member() extends Node
+
 
 case class BinaryNode(left: Expression, op: Token, right: Expression)
     extends Expression {
@@ -167,9 +174,27 @@ case class VariableDeclarationNode(keyword: Token,
                                    expression: Expression)
     extends Statement {
   override def getKind: TokenType = TokenType.variableDeclaration
-
-
 }
+
+case class FunctionDeclarationNode(functionKeyword:Token,
+                                   identifier:Token,
+                                   openParenthesisToken:Token,
+                                   parameters:List[ParameterNode],
+                                   closeParenthesisToken:Token,
+                                   functionType:TypeClauseNode,
+                                   bode:Statement) extends Member {
+  override def getKind: TokenType = TokenType.functionDeclaration
+}
+case class ParameterNode(identifier:Token,
+                         parameterType:TypeClauseNode) extends Node{
+  override def getKind: TokenType = TokenType.parameter
+}
+
+case class TypeClauseNode(colonToken:Token,
+                          identifier:Token) extends Node{
+  override def getKind: TokenType = TokenType.typeClause
+}
+
 
 case class FunctionCallNode(identifier: Token, arguments: List[Expression])
     extends Expression {

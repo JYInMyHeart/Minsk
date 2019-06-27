@@ -168,6 +168,9 @@ class Lexer(val sourceText: SourceText) {
           kind = TokenType.bangEqualsToken
           position += 1
         }
+      case ':' =>
+        position += 1
+        kind = TokenType.colonToken
       case '<' =>
         position += 1
         if (current != '=') {

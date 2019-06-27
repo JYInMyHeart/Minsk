@@ -34,10 +34,10 @@ object TokenType extends Enumeration {
   val
   //tokens
   keyword, func, identifierToken, literal,numberToken, openParenthesisToken, closeParenthesisToken,lmb,rmb,
-  equalsToken, equalsEqualsToken,bangToken, bangEqualsToken, lessToken, greaterToken,
+  equalsToken, equalsEqualsToken,bangToken, bangEqualsToken, lessToken, greaterToken,colonToken,
   lessOrEqualsToken, greaterOrEqualsToken, plusToken, minusToken, starToken, slashToken,
   modToken, ampersandToken, ampersandAmpersandToken,pipeToken,pipePipeToken, tildeToken, hatToken, whiteSpaceToken, newline,
-  eofToken, wrongToken, stringToken,openBraceToken, closeBraceToken, annotationToken, typeToken,commaToken,
+  eofToken, wrongToken, stringToken,openBraceToken, closeBraceToken, typeToken,commaToken,
   //keyword
   falseKeyword, trueKeyword, varKeyword, letKeyword, ifKeyword, forKeyword,
   whileKeyword, elseKeyword, toKeyword, funcKeyword, returnKeyword,
@@ -46,7 +46,8 @@ object TokenType extends Enumeration {
   braceExpression, nameExpression, assignmentExpression, funcCallExpression,
 
   //statement
-  expressionStatement, variableDeclaration, blockStatement, ifStatement,
+  expressionStatement, variableDeclaration, blockStatement, ifStatement,functionDeclaration,
+  parameter,typeClause,globalStatement,
   forStatement, whileStatement, funcStatement, paramStatement = Value
 }
 

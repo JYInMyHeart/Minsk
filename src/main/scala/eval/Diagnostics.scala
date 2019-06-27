@@ -19,6 +19,16 @@ object Diagnostics {
 }
 
 class DiagnosticsBag {
+  def reportUndefinedType(text: String, getSpan: TextSpan) = {
+    val msg = s"function type $text was undefined at $getSpan"
+    report(getSpan,msg)
+  }
+
+  def reportParameterAlreadyDeclared(getSpan: TextSpan, parameterName: String) = {
+    val msg = s"parameter $parameterName has already declared at $getSpan"
+    report(getSpan,msg)
+  }
+
   def reportUndefinedFunction(span: TextSpan, text: String) = {
     val msg = s"Function $text was undefined at $span"
     report(span,msg)

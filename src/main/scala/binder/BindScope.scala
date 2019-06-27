@@ -6,56 +6,54 @@ import symbol.{FunctionSymbol, VariableSymbol}
 import scala.collection.mutable
 
 case class BindScope(parent: BindScope) {
-  private val variables: mutable.HashMap[String, VariableSymbol] =
-    mutable.HashMap()
-  private val functions: mutable.HashMap[String, FunctionSymbol] =
-    mutable.HashMap()
+  private val symbols =
+    mutable.HashMap[String,Symbol]()
 
-  def tryDeclare(variableSymbol: VariableSymbol): Boolean = {
-    if (variables.contains(variableSymbol.name))
+
+  def tryDeclare(variableSymbol: VariableSymbol): Boolean = tryDeclareSymbol(variableSymbol)
+
+
+  def tryDeclare(functionSymbol: FunctionSymbol):Boolean = tryDeclareSymbol(functionSymbol)
+
+  def tryDeclareSymbol[A <: Symbol](symbol:A):Boolean = {
+    if (symbols.contains(symbol.name))
       false
     else {
-      variables += variableSymbol.name -> variableSymbol
+      symbols += symbol.name -> symbol
       true
     }
   }
 
-  def tryDeclare(funcStatement: FunctionSymbol):Boolean = {
-    if(functions.contains(funcStatement.name))
-      false
-    else{
-      functions += funcStatement.name -> funcStatement
-      true
-    }
-  }
 
-  def tryLookup(name: String): VariableSymbol = {
-    if (variables.contains(name))
-      return variables(name)
+  def tryLookupVariable(name: String): VariableSymbol = tryLookupSymbol[VariableSymbol](name)
+
+  def tryLookupFunction(name: String): FunctionSymbol = tryLookupSymbol[FunctionSymbol](name)
+
+  def tryLookupSymbol[A >: Symbol](name:String):A = {
+    if (symbols.contains(name))
+      return symbols(name)
     if (parent == null)
       return null
-    parent.tryLookup(name)
-  }
-
-  def tryLookupFunc(name: String): FunctionSymbol = {
-    if (functions.contains(name))
-      return functions(name)
-    if (parent == null)
-      return null
-    parent.tryLookupFunc(name)
+    parent.tryLookupSymbol(name)
   }
 
   def getDeclaredVariables: List[VariableSymbol] = {
-    variables.values.toList
+    getDeclaredSymbols[VariableSymbol]()
   }
 
   def getDeclaredFunctions: List[FunctionSymbol] = {
-    functions.values.toList
+    getDeclaredSymbols[FunctionSymbol]()
   }
+
+  def getDeclaredSymbols[A >: Symbol]():List[A] ={
+    symbols.values.toList
+  }
+
+
 }
 
 case class BoundGlobalScope(previous: BoundGlobalScope,
                             diagnostics: DiagnosticsBag,
                             variables: List[VariableSymbol],
                             functions:List[FunctionSymbol],
-                            statement: BindStatement) {}
+                            statement: List[BindStatement]) {}
