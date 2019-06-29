@@ -182,7 +182,7 @@ case class FunctionDeclarationNode(functionKeyword:Token,
                                    parameters:List[ParameterNode],
                                    closeParenthesisToken:Token,
                                    functionType:TypeClauseNode,
-                                   bode:Statement) extends Member {
+                                   body:Statement) extends Member {
   override def getKind: TokenType = TokenType.functionDeclaration
 }
 case class ParameterNode(identifier:Token,

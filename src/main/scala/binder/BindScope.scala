@@ -1,13 +1,14 @@
 package binder
 
 import eval.DiagnosticsBag
-import symbol.{FunctionSymbol, VariableSymbol}
+import symbol.{FunctionSymbol, VariableSymbol,Symbol}
 
 import scala.collection.mutable
 
 case class BindScope(parent: BindScope) {
-  private val symbols =
-    mutable.HashMap[String,Symbol]()
+  private val symbols:mutable.HashMap[String,T forSome {type T <: Symbol}] =
+    mutable.HashMap()
+
 
 
   def tryDeclare(variableSymbol: VariableSymbol): Boolean = tryDeclareSymbol(variableSymbol)
@@ -15,7 +16,7 @@ case class BindScope(parent: BindScope) {
 
   def tryDeclare(functionSymbol: FunctionSymbol):Boolean = tryDeclareSymbol(functionSymbol)
 
-  def tryDeclareSymbol[A <: Symbol](symbol:A):Boolean = {
+  def tryDeclareSymbol[A <: Symbol](symbol: A):Boolean = {
     if (symbols.contains(symbol.name))
       false
     else {
@@ -29,11 +30,15 @@ case class BindScope(parent: BindScope) {
 
   def tryLookupFunction(name: String): FunctionSymbol = tryLookupSymbol[FunctionSymbol](name)
 
-  def tryLookupSymbol[A >: Symbol](name:String):A = {
-    if (symbols.contains(name))
-      return symbols(name)
+  def tryLookupSymbol[A <: Symbol](name:String):A = {
+    if (symbols.contains(name)){
+      symbols(name) match {
+        case x:A => return x
+        case _ => return null.asInstanceOf[A]
+      }
+    }
     if (parent == null)
-      return null
+      return null.asInstanceOf[A]
     parent.tryLookupSymbol(name)
   }
 
@@ -45,8 +50,8 @@ case class BindScope(parent: BindScope) {
     getDeclaredSymbols[FunctionSymbol]()
   }
 
-  def getDeclaredSymbols[A >: Symbol]():List[A] ={
-    symbols.values.toList
+  def getDeclaredSymbols[A <: Symbol]():List[A] ={
+    symbols.values.map(_.asInstanceOf[A]).toList
   }
 
 

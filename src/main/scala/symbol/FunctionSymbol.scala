@@ -1,8 +1,11 @@
 package symbol
 
-class FunctionSymbol(val name: String,
-                     val parameters: List[VariableSymbol],
-                     val typeSymbol: TypeSymbol)
+import parser.FunctionDeclarationNode
+
+class FunctionSymbol( name:String,
+                      val parameters: List[ParameterSymbol],
+                     val typeSymbol: TypeSymbol,
+                     var functionDeclarationNode: FunctionDeclarationNode = null)
     extends Symbol(name) {
   override def kind: SymbolKind = SymbolKind.Function
 }

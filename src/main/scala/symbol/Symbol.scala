@@ -1,6 +1,6 @@
 package symbol
 
-abstract class Symbol(name: String) {
+abstract class Symbol(val name: String) {
 
   def kind: SymbolKind
 

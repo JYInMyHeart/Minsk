@@ -1,22 +1,8 @@
 package parser
 
 import eval.DiagnosticsBag
-import parser.TokenType.{
-  TokenType,
-  annotationToken,
-  closeBraceToken,
-  closeParenthesisToken,
-  equalsToken,
-  funcCallExpression,
-  funcKeyword,
-  identifierToken,
-  letKeyword,
-  openParenthesisToken,
-  returnKeyword,
-  toKeyword,
-  varKeyword,
-  _
-}
+import parser.TokenType._
+
 import sourceText.SourceText
 
 import scala.collection.mutable.ListBuffer
@@ -141,9 +127,8 @@ class Parser(sourceText: SourceText) {
 
   def parseCompilationUnit(): CompilationUnit = {
     val members = parseMembers()
-    val statement = parseStatement()
     val eofToken = eat(TokenType.eofToken)
-    CompilationUnit(statement, eofToken)
+    CompilationUnit(members.toList, eofToken)
   }
 
   def parseBlockStatement(): BlockStatement = {
@@ -211,7 +196,7 @@ class Parser(sourceText: SourceText) {
 
   def parseParamStatement(): ParamStatement = {
     val paramName = eat(identifierToken)
-    eat(annotationToken)
+    eat(colonToken)
     val paramType = eat(TokenType.typeToken)
     ParamStatement(paramName, paramType)
   }
@@ -225,7 +210,7 @@ class Parser(sourceText: SourceText) {
       parameters :+= parseParamStatement()
     }
     eat(closeParenthesisToken)
-    eat(annotationToken)
+    eat(colonToken)
     val paramType = eat(TokenType.typeToken)
     val returnType =
       ParamStatement(

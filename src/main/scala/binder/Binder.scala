@@ -1,6 +1,6 @@
 package binder
 
-import eval.DiagnosticsBag
+import eval.{Diagnostics, DiagnosticsBag}
 import parser.BindType.BindType
 import parser.TokenType.TokenType
 import parser._
@@ -347,6 +347,26 @@ object Binder {
     }
   }
 
+  def bindProgram(globalScope: BoundGlobalScope):BindProgram = {
+    val parentScope = createParentScope(globalScope)
+    val functionBodies = mutable.HashMap[FunctionSymbol,BindBlockStatement]()
+    val diagnostics = DiagnosticsBag()
+    var scope = globalScope
+    while(scope != null){
+      for(function <- scope.functions){
+        val binder = Binder(parentScope,function)
+        val body = binder.bindStatement(function.functionDeclarationNode.body)
+        val loweredBody = Lowerer.lower(body)
+//        if(function.typeSymbol != TypeSymbol.Void )
+        functionBodies += function -> loweredBody
+        diagnostics concat binder.diagnostics
+      }
+      scope = scope.previous
+    }
+    val statement = Lowerer.lower(BindBlockStatement(globalScope.statement))
+    BindProgram(diagnostics,functionBodies,statement)
+  }
+
   def bindGlobalScope(previous: BoundGlobalScope,
                       syntax: CompilationUnit): BoundGlobalScope = {
     val parentScope = createParentScope(previous)
@@ -393,6 +413,48 @@ object Binder {
   }
 }
 
+abstract class BindTreeRewriter{
+
+  def rewriteBindVariableStatement(n: BindVariableStatement): BindStatement = {
+    val initializer = rewriteExpression(n.initializer)
+    if(initializer == n.initializer)
+      return n
+    BindVariableStatement(n.variableSymbol,initializer)
+  }
+
+  def rewriteBlockStatement(n: BindBlockStatement): BindStatement = {
+    var builders:ListBuffer[BindStatement] = null
+    for(i <- n.bindStatements.indices){
+      val oldStatement = n.bindStatements(i)
+      val newStatement = rewriteStatement(oldStatement)
+      if(newStatement != oldStatement){
+        if(builders == null){
+          builders = ListBuffer[BindStatement]()
+          for(j <- 0 until i)
+            builders += n.bindStatements(j)
+        }
+      }
+      if(builders != null)
+        builders += newStatement
+    }
+    if(builders == null)
+      return n
+    BindBlockStatement(builders.toList)
+  }
+
+  def rewriteStatement(node:BindStatement): BindStatement ={
+    node match {
+      case n:BindBlockStatement => rewriteBlockStatement(n)
+      case n:BindVariableStatement => rewriteBindVariableStatement(n)
+      case n:BindIfStatement => rewriteBindIfStatement(n)
+      case n:BindWhileStatement => rewriteBindWhileStatement(n)
+      case n:BindForStatement => rewriteBindForStatement(n)
+      case n:BindExpressionStatement => rewriteBindExpressionStatement(n)
+      case _ =>
+        throw new Exception(s"unexpected node:${node.getKind}")
+    }
+  }
+}
 abstract class BoundNode {
   def getKind: BindType.BindType
 }
@@ -527,6 +589,12 @@ case class BindConversionExpression(typeSymbol: TypeSymbol,
   override def getType: TypeSymbol = typeSymbol
 
   override def getKind: BindType = BindType.conversionExpression
+}
+
+case class BindProgram(diagnostics:DiagnosticsBag,
+                       functions:mutable.HashMap[FunctionSymbol,BindBlockStatement],
+                       variables:mutable.HashMap[VariableSymbol,BindBlockStatement]){
+
 }
 
 object BoundBinaryOperator {
