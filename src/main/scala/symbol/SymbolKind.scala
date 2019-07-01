@@ -6,5 +6,6 @@ object SymbolKind {
   val Variable = new SymbolKind()
   val Parameter = new SymbolKind()
   val Type = new SymbolKind()
+  val LocalVariable = new SymbolKind()
 
 }

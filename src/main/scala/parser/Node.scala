@@ -15,7 +15,7 @@ abstract class Node {
     val last = getChildren.last.getSpan
     TextSpan.fromBounds(first.start, last.end)
   }
-  def getChildren:List[Node] = {
+  def getChildren: List[Node] = {
     val result = ListBuffer[Node]()
     val properties = getClass.getDeclaredFields
     for (property <- properties) {
@@ -104,8 +104,21 @@ case class WhileStatement(whileToken: Token,
 
 }
 
-case class GlobalStatementNode(statement:Statement) extends Member{
+case class GlobalStatementNode(statement: Statement) extends Member {
   override def getKind: TokenType = TokenType.globalStatement
+}
+
+case class BreakStatement(keyword: Token) extends Statement {
+  override def getKind: TokenType = TokenType.breakStatement
+}
+
+case class ContinueStatement(keyword: Token) extends Statement {
+  override def getKind: TokenType = TokenType.continueStatement
+}
+
+case class ReturnStatement(keyword: Token, expression: Expression)
+    extends Statement {
+  override def getKind: TokenType = TokenType.returnStatement
 }
 
 case class SyntaxTree(diagnostics: DiagnosticsBag, root: CompilationUnit)
@@ -127,12 +140,9 @@ case class CompilationUnit(members: List[Member], eof: Token)
 }
 abstract class Member() extends Node
 
-
 case class BinaryNode(left: Expression, op: Token, right: Expression)
     extends Expression {
   override def getKind: TokenType.TokenType = TokenType.binaryExpression
-
-
 
   override def toString: String = s"parser.BinaryNode:${left.getKind}"
 }
@@ -145,7 +155,6 @@ case class BraceNode(left: Expression, op: Expression, right: Expression)
     extends Expression {
   override def getKind: TokenType.TokenType = TokenType.braceExpression
 
-
 }
 
 case class UnaryNode(op: Expression, operand: Expression) extends Expression {
@@ -156,7 +165,6 @@ case class UnaryNode(op: Expression, operand: Expression) extends Expression {
 case class NameNode(identifierToken: Token) extends Expression {
   override def getKind: TokenType.TokenType = TokenType.nameExpression
 
-
 }
 
 case class AssignmentNode(identifierToken: Token,
@@ -164,7 +172,6 @@ case class AssignmentNode(identifierToken: Token,
                           expression: Expression)
     extends Expression {
   override def getKind: TokenType.TokenType = TokenType.assignmentExpression
-
 
 }
 
@@ -176,29 +183,27 @@ case class VariableDeclarationNode(keyword: Token,
   override def getKind: TokenType = TokenType.variableDeclaration
 }
 
-case class FunctionDeclarationNode(functionKeyword:Token,
-                                   identifier:Token,
-                                   openParenthesisToken:Token,
-                                   parameters:List[ParameterNode],
-                                   closeParenthesisToken:Token,
-                                   functionType:TypeClauseNode,
-                                   body:Statement) extends Member {
+case class FunctionDeclarationNode(functionKeyword: Token,
+                                   identifier: Token,
+                                   openParenthesisToken: Token,
+                                   parameters: List[ParameterNode],
+                                   closeParenthesisToken: Token,
+                                   functionType: TypeClauseNode,
+                                   body: Statement)
+    extends Member {
   override def getKind: TokenType = TokenType.functionDeclaration
 }
-case class ParameterNode(identifier:Token,
-                         parameterType:TypeClauseNode) extends Node{
+case class ParameterNode(identifier: Token, parameterType: TypeClauseNode)
+    extends Node {
   override def getKind: TokenType = TokenType.parameter
 }
 
-case class TypeClauseNode(colonToken:Token,
-                          identifier:Token) extends Node{
+case class TypeClauseNode(colonToken: Token, identifier: Token) extends Node {
   override def getKind: TokenType = TokenType.typeClause
 }
-
 
 case class FunctionCallNode(identifier: Token, arguments: List[Expression])
     extends Expression {
   override def getKind: TokenType = TokenType.funcCallExpression
-
 
 }

@@ -19,28 +19,57 @@ object Diagnostics {
 }
 
 class DiagnosticsBag {
-  def reportUndefinedType(text: String, getSpan: TextSpan) = {
-    val msg = s"function type $text was undefined at $getSpan"
-    report(getSpan,msg)
+  def reportExpressionMustHaveValue(getSpan: TextSpan) = {
+    val msg = s"expression must have a value."
+    report(getSpan, msg)
   }
 
-  def reportParameterAlreadyDeclared(getSpan: TextSpan, parameterName: String) = {
+  def reportMissingReturnExpression(span: TextSpan, typeSymbol: TypeSymbol) = {
+    val msg = s"An expression of type $typeSymbol expected."
+    report(span, msg)
+  }
+
+  def reportInvalidReturnExpression(getSpan: TextSpan, name: String) = {
+    val msg = s"unit funtion should not have return expression"
+    report(getSpan, msg)
+  }
+
+  def reportInvalidReturn(span: TextSpan) = {
+    val msg = s"invalid function's return statement at $span"
+    report(span, msg)
+  }
+
+  def reportInvalidBreakOrContinue(getSpan: TextSpan, text: String) = {
+    val msg = s"invalid break or continue label at ${getSpan}"
+    report(getSpan, msg)
+  }
+
+  def reportUndefinedType(text: String, getSpan: TextSpan) = {
+    val msg = s"function type $text was undefined at $getSpan"
+    report(getSpan, msg)
+  }
+
+  def reportParameterAlreadyDeclared(getSpan: TextSpan,
+                                     parameterName: String) = {
     val msg = s"parameter $parameterName has already declared at $getSpan"
-    report(getSpan,msg)
+    report(getSpan, msg)
   }
 
   def reportUndefinedFunction(span: TextSpan, text: String) = {
     val msg = s"Function $text was undefined at $span"
-    report(span,msg)
+    report(span, msg)
   }
 
   def reportUnterminatedString(span: TextSpan): Unit = {
     val msg = s"unterminated string at $span"
-    report(span,msg)
+    report(span, msg)
   }
 
-  def reportParamMismatch(span: TextSpan, param: List[VariableSymbol], expressions: List[Expression]) = {
-    val msg = s"functionCall's paramList should be $param bug got expressions at $span!"
+  def reportParamMismatch(span: TextSpan,
+                          param: List[VariableSymbol],
+                          expressions: List[Expression]) = {
+    val msg =
+      s"functionCall's paramList should be $param bug got expressions at $span!"
     report(span, msg)
   }
 
@@ -72,7 +101,9 @@ class DiagnosticsBag {
     reports += Diagnostics(span, msg)
   }
 
-  def reportInvalidNumber(span: TextSpan, text: String, clazz: TypeSymbol): Unit = {
+  def reportInvalidNumber(span: TextSpan,
+                          text: String,
+                          clazz: TypeSymbol): Unit = {
     val msg = s"The number $text isn't valid $clazz at $span."
     report(span, msg)
   }
@@ -113,15 +144,21 @@ class DiagnosticsBag {
     report(span, msg)
   }
 
-  def reportFunctionTypeMismatched(span: TextSpan,  funcName:String,actualType: TypeSymbol,
+  def reportFunctionTypeMismatched(span: TextSpan,
+                                   funcName: String,
+                                   actualType: TypeSymbol,
                                    expectedType: TypeSymbol): Unit = {
-    val msg = s"Function $funcName expect $expectedType but got $actualType at $span"
+    val msg =
+      s"Function $funcName expect $expectedType but got $actualType at $span"
     report(span, msg)
   }
 
-  def reportFunctionParametersLengthMismatched(span: TextSpan,  funcName:String,funcParamLen: Int,
+  def reportFunctionParametersLengthMismatched(span: TextSpan,
+                                               funcName: String,
+                                               funcParamLen: Int,
                                                realParamLen: Int): Unit = {
-    val msg = s"Function $funcName expect parameters length is $funcParamLen but got $realParamLen at $span"
+    val msg =
+      s"Function $funcName expect parameters length is $funcParamLen but got $realParamLen at $span"
     report(span, msg)
   }
 

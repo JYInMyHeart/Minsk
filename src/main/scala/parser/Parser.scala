@@ -55,40 +55,39 @@ class Parser(sourceText: SourceText) {
     GlobalStatementNode(statement)
   }
 
-  def parseTypeClause():TypeClauseNode = {
+  def parseTypeClause(): TypeClauseNode = {
     val colonToken = eat(TokenType.colonToken)
     val identifier = eat(identifierToken)
-    TypeClauseNode(colonToken,identifier)
+    TypeClauseNode(colonToken, identifier)
   }
 
-  def parseOptionalTypeClause():TypeClauseNode = current.getKind match {
+  def parseOptionalTypeClause(): TypeClauseNode = current.getKind match {
     case TokenType.colonToken => parseTypeClause()
-    case _ => null
+    case _                    => null
   }
 
   def parseParameter(): ParameterNode = {
     val identifier = eat(identifierToken)
     val parameterType = parseTypeClause()
-    ParameterNode(identifier,parameterType)
+    ParameterNode(identifier, parameterType)
   }
 
-  def parseParameterList():List[ParameterNode] = {
+  def parseParameterList(): List[ParameterNode] = {
     val nodesAndSeparators = ListBuffer[ParameterNode]()
     var parseNextParameter = true
-    while(parseNextParameter
-      && current.getKind != closeParenthesisToken
-    && current.getKind != eofToken){
+    while (parseNextParameter
+           && current.getKind != closeParenthesisToken
+           && current.getKind != eofToken) {
       val parameter = parseParameter()
       nodesAndSeparators += parameter
-      if(current.getKind == commaToken){
+      if (current.getKind == commaToken) {
         eat(commaToken)
-      }else{
+      } else {
         parseNextParameter = false
       }
     }
     nodesAndSeparators.toList
   }
-
 
   def parseFunctionDeclaration(): Member = {
     val functionKeyword = eat(TokenType.funcKeyword)
@@ -98,15 +97,16 @@ class Parser(sourceText: SourceText) {
     val closeParenthesisToken = eat(TokenType.closeParenthesisToken)
     val functionType = parseOptionalTypeClause()
     val body = parseBlockStatement()
-    FunctionDeclarationNode(functionKeyword,identifier
-    ,openParenthesisToken,
-      parameters,
-      closeParenthesisToken,
-      functionType,
-      body)
+    FunctionDeclarationNode(functionKeyword,
+                            identifier,
+                            openParenthesisToken,
+                            parameters,
+                            closeParenthesisToken,
+                            functionType,
+                            body)
   }
 
-  def parseMember():Member = current.getKind match {
+  def parseMember(): Member = current.getKind match {
     case TokenType.funcKeyword =>
       parseFunctionDeclaration()
     case _ =>
@@ -115,11 +115,11 @@ class Parser(sourceText: SourceText) {
 
   def parseMembers(): ListBuffer[Member] = {
     val members = ListBuffer[Member]()
-    while(current.getKind != TokenType.eofToken){
-      val startToekn = current
+    while (current.getKind != TokenType.eofToken) {
+      val startToken = current
       val member = parseMember()
       members += member
-      if(current == startToekn)
+      if (current == startToken)
         nextToken
     }
     members
@@ -221,9 +221,25 @@ class Parser(sourceText: SourceText) {
     FuncStatement(func, id, parameters, returnType, body)
   }
 
-//  def parseArrayStatement():ArrayStatement = {
-//
-//  }
+  def parseBreakStatement(): Statement = {
+    val keyword = eat(TokenType.breakKeyword)
+    BreakStatement(keyword)
+  }
+
+  def parseContinueStatement(): Statement = {
+    val keyword = eat(TokenType.continueKeyword)
+    ContinueStatement(keyword)
+  }
+
+  def parseReturnStatement(): Statement = {
+    val keyword = eat(TokenType.returnKeyword)
+    val keywordLine = sourceText.getLineIndex(keyword.span.start)
+    val currentLine = sourceText.getLineIndex(current.span.start)
+    val isEof = current.getKind == TokenType.eofToken
+    val sameLine = !isEof && keywordLine == currentLine
+    val expression = if (sameLine) parseExpression() else null
+    ReturnStatement(keyword, expression)
+  }
 
   def parseStatement(): Statement = {
     current.tokenType match {
@@ -241,6 +257,12 @@ class Parser(sourceText: SourceText) {
         parseForStatement()
       case TokenType.funcKeyword =>
         parseFuncStatement()
+      case TokenType.breakKeyword =>
+        parseBreakStatement()
+      case TokenType.continueKeyword =>
+        parseContinueStatement()
+      case TokenType.returnKeyword =>
+        parseReturnStatement()
       case _ =>
         parseExpressionStatement()
     }
@@ -329,7 +351,7 @@ class Parser(sourceText: SourceText) {
     LiteralNode(number)
   }
 
-  private def parseStringLiteral():LiteralNode = {
+  private def parseStringLiteral(): LiteralNode = {
     val stringToken = eat(TokenType.stringToken)
     LiteralNode(stringToken)
   }

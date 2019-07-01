@@ -4,35 +4,65 @@ import binder._
 import parser.BindType
 import symbol._
 
+import scala.collection.immutable.Stack
 import scala.collection.mutable
 import scala.io.StdIn
 import scala.util.Random
 
-class Eval(val variables: mutable.HashMap[VariableSymbol, Any]) {
+class Eval(program: BindProgram) {
   private var lastValue: Any = _
 
-  def eval(bindStatement: BindStatement): Any = {
-    evalStatement(bindStatement)
-    lastValue
-  }
+  private val locals: Stack[mutable.HashMap[VariableSymbol, Any]] = Stack()
 
-  def evalStatement(statement: BindStatement): Unit = {
-    (statement.getKind, statement) match {
-      case (BindType.blockStatement, s: BindBlockStatement) =>
-        evalBlockStatement(s)
-      case (BindType.expressionStatement, s: BindExpressionStatement) =>
-        evalExpressionStatement(s)
-      case (BindType.variableDeclaration, s: BindVariableStatement) =>
-        evalVariableStatement(s)
-      case (BindType.ifStatement, s: BindIfStatement) =>
-        evalIfStatement(s)
-      case (BindType.whileStatement, s: BindWhileStatement) =>
-        evalWhileStatement(s)
-      case (BindType.forStatement, s: BindForStatement) =>
-        evalForStatement(s)
-      case _ =>
-        throw new Exception(s"Unexpected statement ${statement.getKind}")
+  private var globals: mutable.HashMap[VariableSymbol, Any] = _
+
+  private var random: Random = _
+
+  def this(variables: mutable.HashMap[VariableSymbol, Any],
+           program: BindProgram) {
+    this(program)
+    globals = variables
+    locals.push(mutable.HashMap[VariableSymbol, Any]())
+  }
+  def evaluate() = eval(program.statement)
+
+  def eval(body: BindBlockStatement): Any = {
+    var labelToIndex = mutable.HashMap[BindLabel, Int]()
+    for (i <- body.bindStatements.indices) {
+      body.bindStatements(i) match {
+        case statement: BindLabelStatement =>
+          labelToIndex += statement.label -> (i + 1)
+        case _ =>
+      }
     }
+    var index = 0
+    while (index < body.bindStatements.length) {
+      val statement = body.bindStatements(index)
+      (statement.getKind, statement) match {
+        case (BindType.blockStatement, s: BindBlockStatement) =>
+          evalBlockStatement(s)
+          index += 1
+        case (BindType.expressionStatement, s: BindExpressionStatement) =>
+          evalExpressionStatement(s)
+          index += 1
+        case (BindType.variableDeclaration, s: BindVariableDeclaration) =>
+          evalVariableStatement(s)
+          index += 1
+        case (BindType.ifStatement, s: BindIfStatement) =>
+          evalIfStatement(s)
+          index += 1
+        case (BindType.whileStatement, s: BindWhileStatement) =>
+          evalWhileStatement(s)
+          index += 1
+        case (BindType.forStatement, s: BindForStatement) =>
+          evalForStatement(s)
+          index += 1
+        case _ =>
+          throw new Exception(s"Unexpected statement ${statement.getKind}")
+      }
+    }
+
+    lastValue
   }
 
   def evalForStatement(statement: BindForStatement): Unit = {
@@ -40,7 +70,7 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, Any]) {
     val end = evalExpression(statement.upper)
     for (i <- start
            .asInstanceOf[Int]
-            to end.asInstanceOf[Int]) {
+           to end.asInstanceOf[Int]) {
       variables(statement.variable) = i
       evalStatement(statement.body)
     }
@@ -58,14 +88,14 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, Any]) {
   def evalIfStatement(statement: BindIfStatement): Unit = {
     val value = evalExpression(statement.condition)
     value match {
-      case true => evalStatement(statement.expr1)
+      case true => evalStatement(statement.thenStatement)
       case false =>
-        if (statement.expr2 != null)
-          evalStatement(statement.expr2)
+        if (statement.elseStatement != null)
+          evalStatement(statement.elseStatement)
     }
   }
 
-  def evalVariableStatement(statement: BindVariableStatement): Unit = {
+  def evalVariableStatement(statement: BindVariableDeclaration): Unit = {
     val value = evalExpression(statement.initializer)
     variables(statement.variableSymbol) = value
     lastValue = value
@@ -94,7 +124,7 @@ class Eval(val variables: mutable.HashMap[VariableSymbol, Any]) {
       case node: BindBinaryExpression =>
         val left = evalExpression(node.boundLeft)
         val right = evalExpression(node.boundRight)
-        val op = node.bindType.bindType
+        val op = node.operator.bindType
         (left, right, op) match {
           case (l: Double, r: Double, BindType.addition)       => l + r
           case (l: Double, r: Double, BindType.subtraction)    => l - r

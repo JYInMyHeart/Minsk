@@ -28,7 +28,7 @@ object Facts {
       case TokenType.`tildeToken`            => "~"
       case TokenType.`hatToken`              => "^"
       case TokenType.`eofToken`              => "\0"
-      case TokenType.colonToken         => ":"
+      case TokenType.colonToken              => ":"
       case TokenType.openBraceToken          => "{"
       case TokenType.closeBraceToken         => "}"
       case TokenType.falseKeyword            => "false"
@@ -42,6 +42,8 @@ object Facts {
       case TokenType.toKeyword               => "to"
       case TokenType.funcKeyword             => "def"
       case TokenType.returnKeyword           => "return"
+      case TokenType.breakKeyword            => "break"
+      case TokenType.continueKeyword         => "continue"
       case _                                 => null
     }
   }
@@ -103,20 +105,20 @@ object Facts {
   }
 
   def getKeywordType(text: String): TokenType.Value = text match {
-    case "else"    => TokenType.elseKeyword
-    case "false"   => TokenType.falseKeyword
-    case "for"     => TokenType.forKeyword
-    case "if"      => TokenType.ifKeyword
-    case "let"     => TokenType.letKeyword
-    case "to"      => TokenType.toKeyword
-    case "true"    => TokenType.trueKeyword
-    case "var"     => TokenType.varKeyword
-    case "while"   => TokenType.whileKeyword
-    case "def"     => TokenType.funcKeyword
-    case "return"  => TokenType.returnKeyword
-    case "Integer" => TokenType.typeToken
-    case "Double"  => TokenType.typeToken
-    case _         => TokenType.identifierToken
+    case "else"     => TokenType.elseKeyword
+    case "false"    => TokenType.falseKeyword
+    case "for"      => TokenType.forKeyword
+    case "if"       => TokenType.ifKeyword
+    case "let"      => TokenType.letKeyword
+    case "to"       => TokenType.toKeyword
+    case "true"     => TokenType.trueKeyword
+    case "var"      => TokenType.varKeyword
+    case "while"    => TokenType.whileKeyword
+    case "def"      => TokenType.funcKeyword
+    case "return"   => TokenType.returnKeyword
+    case "break"    => TokenType.breakKeyword
+    case "continue" => TokenType.continueKeyword
+    case _          => TokenType.identifierToken
   }
 
 }

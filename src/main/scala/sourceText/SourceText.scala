@@ -8,7 +8,7 @@ class SourceText(text: String) {
 
   def length = text.length
 
-  def GetLineIndex(position: Int): Int = {
+  def getLineIndex(position: Int): Int = {
     var lower = 0
     var upper = lines.length - 1
 
@@ -29,8 +29,7 @@ class SourceText(text: String) {
     lower
   }
 
-  def at(index:Int): Char = text.charAt(index)
-
+  def at(index: Int): Char = text.charAt(index)
 
   override def toString: String = text
 

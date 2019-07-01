@@ -1,17 +1,20 @@
 package binder
 
-import eval.{Diagnostics, DiagnosticsBag}
+import eval.DiagnosticsBag
+import lowering.Lowerer
 import parser.BindType.BindType
 import parser.TokenType.TokenType
 import parser._
-import symbol.{BuiltinFunctions, FunctionSymbol, ParameterSymbol, TypeSymbol, VariableSymbol}
+import sourceText.TextSpan
+import symbol._
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-case class Binder(parent: BindScope,
-                  function:FunctionSymbol) {
+case class Binder(parent: BindScope, function: FunctionSymbol) {
 
+  private var labelCounter: Int = _
+  private val loopStack: mutable.Stack[(BindLabel, BindLabel)] = mutable.Stack()
   def lookupTyoe(name: String): TypeSymbol = name match {
     case "bool" =>
       TypeSymbol.Bool
@@ -22,43 +25,94 @@ case class Binder(parent: BindScope,
     case _ => null
   }
 
-  def bindTypeClause(node: TypeClauseNode):TypeSymbol = {
-    if(node == null) return null
+  def bindTypeClause(node: TypeClauseNode): TypeSymbol = {
+    if (node == null) return null
     val functionType = lookupTyoe(node.identifier.text)
-    if(functionType == null)
-      diagnostics.reportUndefinedType(node.identifier.text,node.identifier.getSpan)
+    if (functionType == null)
+      diagnostics.reportUndefinedType(node.identifier.text,
+                                      node.identifier.getSpan)
     functionType
   }
 
   def bindFunctionDeclaration(node: FunctionDeclarationNode): Unit = {
     val parameters = ListBuffer[ParameterSymbol]()
     val seenParameterNames = mutable.HashSet[String]()
-    for(parameterNode <- node.parameters){
+    for (parameterNode <- node.parameters) {
       val parameterName = parameterNode.identifier.text
       val parameterType = bindTypeClause(parameterNode.parameterType)
-      if(!seenParameterNames.add(parameterName)){
-        diagnostics.reportParameterAlreadyDeclared(parameterNode.getSpan,parameterName)
-      }else{
-        val parameter = ParameterSymbol(parameterName,parameterType)
+      if (!seenParameterNames.add(parameterName)) {
+        diagnostics.reportParameterAlreadyDeclared(parameterNode.getSpan,
+                                                   parameterName)
+      } else {
+        val parameter = ParameterSymbol(parameterName, parameterType)
         parameters += parameter
       }
     }
     val bindType = bindTypeClause(node.functionType)
-    val functionType = if(bindType == null) TypeSymbol.Void else bindType
-    val declaredFuntion = new FunctionSymbol(node.identifier.text,parameters.toList,functionType)
-    if(!scope.tryDeclare(declaredFuntion))
-      diagnostics.reportFunctionAlreadyDeclared(node.identifier.span,declaredFuntion.name)
+    val functionType = if (bindType == null) TypeSymbol.Void else bindType
+    val declaredFuntion =
+      new FunctionSymbol(node.identifier.text, parameters.toList, functionType)
+    if (!scope.tryDeclare(declaredFuntion))
+      diagnostics.reportFunctionAlreadyDeclared(node.identifier.span,
+                                                declaredFuntion.name)
   }
 
   val diagnostics: DiagnosticsBag = DiagnosticsBag()
   var scope: BindScope = BindScope(parent)
-  var _function:FunctionSymbol = initFunction
+  var _function: FunctionSymbol = initFunction
 
-  def initFunction:FunctionSymbol = {
-    if(function != null)
-      for(p <- function.parameters)
+  def initFunction: FunctionSymbol = {
+    if (function != null)
+      for (p <- function.parameters)
         scope.tryDeclare(p)
     function
+  }
+
+  def bindReturnStatement(statement: ReturnStatement): BindStatement = {
+    var expression =
+      if (statement.expression == null) null
+      else bindExpression(statement.expression)
+    if (_function == null)
+      diagnostics.reportInvalidReturn(statement.keyword.span)
+    else {
+      if (_function.typeSymbol == TypeSymbol.Void)
+        if (expression != null)
+          diagnostics.reportInvalidReturnExpression(
+            statement.expression.getSpan,
+            _function.name)
+        else {
+          if (expression == null)
+            diagnostics.reportMissingReturnExpression(statement.keyword.span,
+                                                      _function.typeSymbol)
+          else
+            expression = bindConversion(statement.expression.getSpan,
+                                        _function.typeSymbol,
+                                        expression)
+        }
+    }
+    BindReturnStatement(expression)
+  }
+
+  def bindBreakStatement(statement: BreakStatement): BindStatement = {
+    if (loopStack.isEmpty) {
+      diagnostics.reportInvalidBreakOrContinue(statement.keyword.getSpan,
+                                               statement.keyword.text)
+      return bindErrorStatement()
+    }
+    val breakLabel = loopStack.head._1
+    BindGotoStatement(breakLabel)
+  }
+
+  def bindErrorStatement() = BindExpressionStatement(BindErrorExpression())
+
+  def bindContinueStatement(statement: ContinueStatement): BindStatement = {
+    if (loopStack.isEmpty) {
+      diagnostics.reportInvalidBreakOrContinue(statement.keyword.getSpan,
+                                               statement.keyword.text)
+      return bindErrorStatement()
+    }
+    val continueLabel = loopStack.head._1
+    BindGotoStatement(continueLabel)
   }
 
   def bindStatement(statement: Statement): BindStatement = {
@@ -77,38 +131,50 @@ case class Binder(parent: BindScope,
         bindWhileStatement(s)
       case (TokenType.forStatement, s: ForStatement) =>
         bindForStatement(s)
-      case (TokenType.funcStatement, s: FuncStatement) =>
-        bindFuncStatement(s)
+      case (TokenType.returnStatement, s: ReturnStatement) =>
+        bindReturnStatement(s)
+      case (TokenType.breakKeyword, s: BreakStatement) =>
+        bindBreakStatement(s)
+      case (TokenType.continueStatement, s: ContinueStatement) =>
+        bindContinueStatement(s)
       case _ =>
         throw new Exception(s"unexpected syntax ${statement.getKind}")
     }
   }
 
-  def bindExpression(expression: Expression,
-                     targetType: TypeSymbol): BindExpression = {
-    val res = bindExpression(expression)
-    if (res.getType != targetType)
-      diagnostics.reportCannotConvert(null, res.getType, targetType)
-    res
-  }
+//  def bindExpression(expression: Expression,
+//                     targetType: TypeSymbol): BindExpression = {
+//    val res = bindExpression(expression)
+//    if (res.getType != targetType)
+//      diagnostics.reportCannotConvert(null, res.getType, targetType)
+//    res
+//  }
 
-  def bindConversion(typeSymbol: TypeSymbol,
-                     expression: Expression): BindExpression = {
-    val expr = bindExpression(expression)
-    val conversion = Conversion.classify(expr.getType, typeSymbol)
+  def bindConversion(node: Expression,
+                     typeSymbol: TypeSymbol,
+                     allowExplicit: Boolean = false): BindExpression = {
+    val expression = bindExpression(node)
+    bindConversion(node.getSpan, typeSymbol, expression, allowExplicit)
+  }
+  def bindConversion(diagnosticSpan: TextSpan,
+                     typeSymbol: TypeSymbol,
+                     expression: BindExpression,
+                     allowExplicit: Boolean = false): BindExpression = {
+    val conversion = Conversion.classify(expression.getType, typeSymbol)
     if (!conversion.exists) {
-      diagnostics.reportCannotConvert(expression.getSpan,
-                                      expr.getType,
-                                      typeSymbol)
+      if (expression.getType != TypeSymbol.Error && typeSymbol != TypeSymbol.Error)
+        diagnostics.reportCannotConvert(diagnosticSpan,
+                                        expression.getType,
+                                        typeSymbol)
       return BindErrorExpression()
     }
-    BindConversionExpression(typeSymbol, expr)
+    BindConversionExpression(typeSymbol, expression)
   }
 
   def bindFuncCallExpression(n: FunctionCallNode): BindExpression = {
     val typeSymbol = Binder.lookupType(n.identifier.text)
     if (n.arguments.length == 1 && typeSymbol != null) {
-      bindConversion(typeSymbol, n.arguments.head)
+      bindConversion(n.arguments.head, typeSymbol, allowExplicit = true)
       return BindErrorExpression()
     }
     val bindArguments = n.arguments.map(bindExpression)
@@ -141,6 +207,18 @@ case class Binder(parent: BindScope,
     BindFuncCallExpression(functionSymbol, bindArguments)
   }
 
+  def bindExpression(tree: Expression, targetType: TypeSymbol): BindExpression =
+    bindConversion(tree, targetType)
+
+  def bindExpression(tree: Expression, canBeVoid: Boolean): BindExpression = {
+    val result = bindExpression(tree)
+    if (!canBeVoid && result.getType == TypeSymbol.Void) {
+      diagnostics.reportExpressionMustHaveValue(tree.getSpan)
+      BindErrorExpression()
+    }
+    result
+  }
+
   def bindExpression(tree: Expression): BindExpression = {
     (tree.getKind, tree) match {
       case (TokenType.nameExpression, n: NameNode) =>
@@ -162,44 +240,31 @@ case class Binder(parent: BindScope,
     }
   }
 
-  private def bindFuncStatement(statement: FuncStatement): BindFuncStatement = {
-//    val funcName =
-//      new VariableSymbol(statement.identifier.text,
-//                     statement.returnType.paramType.text,
-//                     isReadOnly = true)
-//    val paramsList = for (param <- statement.parameters) yield {
-//      new VariableSymbol(param.id.text, param.paramType.text, isReadOnly = false)
-//    }
-//
-//    scope = BoundScope(this.scope)
-//    paramsList.foreach(scope.tryDeclare(_))
-//    val body = bindStatement(statement.body)
-//    scope = scope.parent
-//    if (body.getType != statement.returnType.paramType.value)
-//      diagnostics.reportFunctionTypeMismatched(
-//        statement.identifier.span,
-//        statement.identifier.text,
-//        statement.returnType.paramType.text,
-//        body.getType)
-//    val function = BindFuncStatement(funcName, paramsList, body)
-//    if (!scope.tryDeclare(function))
-//      diagnostics.reportVariableAlreadyDeclared(
-//        statement.identifier.span,
-//        statement.returnType.paramType.text
-//      )
-//
-//    function
-    null
+  def bindLoopBody(body: Statement): (BindStatement, BindLabel, BindLabel) = {
+    labelCounter += 1
+    val breakLabel = BindLabel(s"break$labelCounter")
+    val continueLabel = BindLabel(s"continue$labelCounter")
+    loopStack.push((breakLabel, continueLabel))
+    val boundBody = bindStatement(body)
+    loopStack.pop()
+    (boundBody, breakLabel, continueLabel)
   }
 
   private def bindForStatement(statement: ForStatement): BindForStatement = {
-    val low = bindExpression(statement.low)
+    val low = bindExpression(statement.low, TypeSymbol.Int)
+    val upper = bindExpression(statement.upper, TypeSymbol.Int)
+    scope = BindScope(scope)
     val variableSymbol =
-      bindVariable(statement.identifier, TypeSymbol.Int, isReadOnly = false)
-    scope.tryDeclare(variableSymbol)
-    val upper = bindExpression(statement.upper)
-    val body = bindStatement(statement.body)
-    BindForStatement(variableSymbol, low, upper, body)
+      bindVariable(statement.identifier, TypeSymbol.Int, isReadOnly = true)
+
+    val (body, breakLabel, continueLabel) = bindLoopBody(statement.body)
+    scope = scope.parent
+    BindForStatement(variableSymbol,
+                     low,
+                     upper,
+                     body,
+                     breakLabel,
+                     continueLabel)
   }
 
   private def bindWhileStatement(
@@ -219,14 +284,14 @@ case class Binder(parent: BindScope,
   }
 
   private def bindVariableDeclaration(
-      statement: VariableDeclarationNode): BindVariableStatement = {
+      statement: VariableDeclarationNode): BindVariableDeclaration = {
     val name = statement.identifier.text
     val isReadOnly = statement.keyword.tokenType == TokenType.letKeyword
     val initializer = bindExpression(statement.expression)
     val variable = new VariableSymbol(name, initializer.getType, isReadOnly)
     if (!scope.tryDeclare(variable))
       diagnostics.reportVariableAlreadyDeclared(statement.identifier.span, name)
-    BindVariableStatement(variable, initializer)
+    BindVariableDeclaration(variable, initializer)
   }
 
   private def bindVariable(identifier: Token,
@@ -347,14 +412,14 @@ object Binder {
     }
   }
 
-  def bindProgram(globalScope: BoundGlobalScope):BindProgram = {
+  def bindProgram(globalScope: BoundGlobalScope): BindProgram = {
     val parentScope = createParentScope(globalScope)
-    val functionBodies = mutable.HashMap[FunctionSymbol,BindBlockStatement]()
+    val functionBodies = mutable.HashMap[FunctionSymbol, BindBlockStatement]()
     val diagnostics = DiagnosticsBag()
     var scope = globalScope
-    while(scope != null){
-      for(function <- scope.functions){
-        val binder = Binder(parentScope,function)
+    while (scope != null) {
+      for (function <- scope.functions) {
+        val binder = Binder(parentScope, function)
         val body = binder.bindStatement(function.functionDeclarationNode.body)
         val loweredBody = Lowerer.lower(body)
 //        if(function.typeSymbol != TypeSymbol.Void )
@@ -364,19 +429,21 @@ object Binder {
       scope = scope.previous
     }
     val statement = Lowerer.lower(BindBlockStatement(globalScope.statement))
-    BindProgram(diagnostics,functionBodies,statement)
+    BindProgram(diagnostics, functionBodies, statement)
   }
 
   def bindGlobalScope(previous: BoundGlobalScope,
                       syntax: CompilationUnit): BoundGlobalScope = {
     val parentScope = createParentScope(previous)
-    val binder = Binder(parentScope,null)
-    for(function <- syntax.members){
-      binder.bindFunctionDeclaration(function.asInstanceOf[FunctionDeclarationNode])
+    val binder = Binder(parentScope, null)
+    for (function <- syntax.members) {
+      binder.bindFunctionDeclaration(
+        function.asInstanceOf[FunctionDeclarationNode])
     }
     val statements = ListBuffer[BindStatement]()
-    for(globalStatement <- syntax.members){
-      val statement = binder.bindStatement(globalStatement.asInstanceOf[GlobalStatementNode].statement)
+    for (globalStatement <- syntax.members) {
+      val statement = binder.bindStatement(
+        globalStatement.asInstanceOf[GlobalStatementNode].statement)
       statements += statement
     }
     val variables = binder.scope.getDeclaredVariables
@@ -384,7 +451,11 @@ object Binder {
     val diagnostics = binder.diagnostics
     if (previous != null)
       diagnostics concat previous.diagnostics
-    BoundGlobalScope(previous, diagnostics, variables, functions, statements.toList)
+    BoundGlobalScope(previous,
+                     diagnostics,
+                     variables,
+                     functions,
+                     statements.toList)
   }
 
   def createParentScope(previous: BoundGlobalScope): BindScope = {
@@ -405,7 +476,6 @@ object Binder {
     parent
   }
 
-
   private def createRootScope(): BindScope = {
     val result = BindScope(null)
     BuiltinFunctions.getAll.foreach(result.tryDeclare)
@@ -413,43 +483,184 @@ object Binder {
   }
 }
 
-abstract class BindTreeRewriter{
+abstract class BindTreeRewriter {
 
-  def rewriteBindVariableStatement(n: BindVariableStatement): BindStatement = {
+  def rewriteBindVariableStatement(
+      n: BindVariableDeclaration): BindStatement = {
     val initializer = rewriteExpression(n.initializer)
-    if(initializer == n.initializer)
+    if (initializer == n.initializer)
       return n
-    BindVariableStatement(n.variableSymbol,initializer)
+    BindVariableDeclaration(n.variableSymbol, initializer)
   }
 
   def rewriteBlockStatement(n: BindBlockStatement): BindStatement = {
-    var builders:ListBuffer[BindStatement] = null
-    for(i <- n.bindStatements.indices){
+    var builders: ListBuffer[BindStatement] = null
+    for (i <- n.bindStatements.indices) {
       val oldStatement = n.bindStatements(i)
       val newStatement = rewriteStatement(oldStatement)
-      if(newStatement != oldStatement){
-        if(builders == null){
+      if (newStatement != oldStatement) {
+        if (builders == null) {
           builders = ListBuffer[BindStatement]()
-          for(j <- 0 until i)
+          for (j <- 0 until i)
             builders += n.bindStatements(j)
         }
       }
-      if(builders != null)
+      if (builders != null)
         builders += newStatement
     }
-    if(builders == null)
+    if (builders == null)
       return n
     BindBlockStatement(builders.toList)
   }
 
-  def rewriteStatement(node:BindStatement): BindStatement ={
+  def rewriteBindIfStatement(n: BindIfStatement): BindStatement = {
+    val condition = rewriteExpression(n.condition)
+    val thenStatement = rewriteStatement(n.thenStatement)
+    val elseStatement =
+      if (n.elseStatement == null) null else rewriteStatement(n.elseStatement)
+    if (condition == n.condition && thenStatement == n.thenStatement && elseStatement == n.thenStatement)
+      return n
+    BindIfStatement(condition, thenStatement, elseStatement)
+  }
+
+  def rewriteBindWhileStatement(n: BindWhileStatement): BindStatement = {
+    val condition = rewriteExpression(n.condition)
+    val body = rewriteStatement(n.body)
+    if (condition == n.condition && body == n.body)
+      return n
+    BindWhileStatement(condition, body)
+  }
+
+  def rewriteBindForStatement(n: BindForStatement): BindStatement = {
+    val variable = n.variable
+    val initializer = rewriteExpression(n.initializer)
+    val upper = rewriteExpression(n.upper)
+    val body = rewriteStatement(n.body)
+    if (initializer == n.initializer && upper == n.upper && body == n.body)
+      return n
+    BindForStatement(variable,
+                     initializer,
+                     upper,
+                     body,
+                     n.breakLabel,
+                     n.continueLabel)
+  }
+
+  def rewriteErrorExpression(node: BindErrorExpression): BindExpression = node
+
+  def rewriteLiteralExpression(node: BindLiteralExpression): BindExpression =
+    node
+
+  def rewriteVariableExpression(node: BindVariableExpression): BindExpression =
+    node
+
+  def rewriteAssignmentExpression(
+      node: BindAssignmentExpression): BindExpression = {
+    val expression = rewriteExpression(node.expression)
+    if (expression == node.expression)
+      return node
+    BindAssignmentExpression(node.variable, expression)
+  }
+
+  def rewriteBinaryExpression(node: BindBinaryExpression): BindExpression = {
+    val left = rewriteExpression(node.boundLeft)
+    val right = rewriteExpression(node.boundRight)
+    if (left == node.boundLeft && right == node.boundRight)
+      return node
+    BindBinaryExpression(node.operator, left, right)
+  }
+
+  def rewriteFuncCallExpression(
+      node: BindFuncCallExpression): BindExpression = {
+    val builder = ListBuffer[BindExpression]()
+    for (i <- node.paramList.indices) {
+      val oldArguement = node.paramList(i)
+      val newArguement = rewriteExpression(oldArguement)
+      if (oldArguement != newArguement) {
+        if (builder.isEmpty) {
+          for (j <- 0 until i)
+            builder += node.paramList(j)
+        }
+      }
+      if (builder.isEmpty)
+        builder += newArguement
+    }
+    if (builder.isEmpty)
+      return node
+    BindFuncCallExpression(node.functionSymbol, builder.toList)
+  }
+
+  def rewriteUnaryExpression(node: BindUnaryExpression): BindExpression = {
+    val operand = rewriteExpression(node.boundOperand)
+    if (operand == node.boundOperand)
+      return node
+    BindUnaryExpression(node.bindType, operand)
+  }
+
+  def rewriteConversionExpression(
+      node: BindConversionExpression): BindExpression = {
+    val expression = rewriteExpression(node.bindExpression)
+    if (expression == node.bindExpression)
+      return node
+    BindConversionExpression(node.typeSymbol, expression)
+  }
+
+  def rewriteExpression(bindExpression: BindExpression): BindExpression = {
+    bindExpression match {
+      case node: BindErrorExpression      => rewriteErrorExpression(node)
+      case node: BindLiteralExpression    => rewriteLiteralExpression(node)
+      case node: BindVariableExpression   => rewriteVariableExpression(node)
+      case node: BindAssignmentExpression => rewriteAssignmentExpression(node)
+      case node: BindBinaryExpression     => rewriteBinaryExpression(node)
+      case node: BindFuncCallExpression   => rewriteFuncCallExpression(node)
+      case node: BindConversionExpression => rewriteConversionExpression(node)
+      case node: BindUnaryExpression      => rewriteUnaryExpression(node)
+      case _ =>
+        throw new Exception(s"Unexpected node: ${bindExpression.getKind}")
+    }
+  }
+
+  def rewriteBindExpressionStatement(
+      n: BindExpressionStatement): BindStatement = {
+    val bindExpression = rewriteExpression(n.bindExpression)
+    if (bindExpression == n.bindExpression)
+      return n
+    BindExpressionStatement(bindExpression)
+  }
+
+  def rewriteBindLabelStatement(n: BindLabelStatement): BindStatement = n
+
+  def rewriteBindGotoStatementt(n: BindGotoStatement): BindStatement = n
+
+  def rewriteBindConditionGotoStatementt(
+      n: BindConditionGotoStatement): BindStatement = {
+    val condition = rewriteExpression(n.condition)
+    if (condition == n.condition)
+      return n
+    BindConditionGotoStatement(n.label, condition, n.jumpIfTrue)
+  }
+
+  def rewriteBindReturnStatement(n: BindReturnStatement): BindStatement = {
+    val expression =
+      if (n.expression == null) null else rewriteExpression(n.expression)
+    if (expression == n.expression)
+      return n
+    BindReturnStatement(expression)
+  }
+
+  def rewriteStatement(node: BindStatement): BindStatement = {
     node match {
-      case n:BindBlockStatement => rewriteBlockStatement(n)
-      case n:BindVariableStatement => rewriteBindVariableStatement(n)
-      case n:BindIfStatement => rewriteBindIfStatement(n)
-      case n:BindWhileStatement => rewriteBindWhileStatement(n)
-      case n:BindForStatement => rewriteBindForStatement(n)
-      case n:BindExpressionStatement => rewriteBindExpressionStatement(n)
+      case n: BindBlockStatement      => rewriteBlockStatement(n)
+      case n: BindVariableDeclaration => rewriteBindVariableStatement(n)
+      case n: BindIfStatement         => rewriteBindIfStatement(n)
+      case n: BindWhileStatement      => rewriteBindWhileStatement(n)
+      case n: BindForStatement        => rewriteBindForStatement(n)
+      case n: BindExpressionStatement => rewriteBindExpressionStatement(n)
+      case n: BindLabelStatement      => rewriteBindLabelStatement(n)
+      case n: BindGotoStatement       => rewriteBindGotoStatementt(n)
+      case n: BindConditionGotoStatement =>
+        rewriteBindConditionGotoStatementt(n)
+      case n: BindReturnStatement => rewriteBindReturnStatement(n)
       case _ =>
         throw new Exception(s"unexpected node:${node.getKind}")
     }
@@ -477,16 +688,16 @@ case class BindBlockStatement(bindStatements: List[BindStatement])
   override def getKind: BindType.BindType = BindType.blockStatement
 }
 
-case class BindVariableStatement(variableSymbol: VariableSymbol,
-                                 initializer: BindExpression)
+case class BindVariableDeclaration(variableSymbol: VariableSymbol,
+                                   initializer: BindExpression)
     extends BindStatement {
 
   override def getKind: BindType = BindType.variableDeclaration
 }
 
 case class BindIfStatement(condition: BindExpression,
-                           expr1: BindStatement,
-                           expr2: BindStatement)
+                           thenStatement: BindStatement,
+                           elseStatement: BindStatement)
     extends BindStatement {
   override def getKind: BindType = BindType.ifStatement
 
@@ -501,11 +712,17 @@ case class BindWhileStatement(condition: BindExpression, body: BindStatement)
 case class BindForStatement(variable: VariableSymbol,
                             initializer: BindExpression,
                             upper: BindExpression,
-                            body: BindStatement)
-    extends BindStatement {
+                            body: BindStatement,
+                            breakLabel: BindLabel,
+                            continueLabel: BindLabel)
+    extends BindLoopStatement(breakLabel, continueLabel) {
   override def getKind: BindType = BindType.forStatement
 
 }
+
+abstract class BindLoopStatement(breakLabel: BindLabel,
+                                 continueLabel: BindLabel)
+    extends BindStatement
 
 case class BindFuncStatement(identifier: VariableSymbol,
                              param: List[VariableSymbol],
@@ -515,13 +732,29 @@ case class BindFuncStatement(identifier: VariableSymbol,
 
 }
 
-case class BindBinaryExpression(bindType: BoundBinaryOperator,
+case class BindGotoStatement(label: BindLabel) extends BindStatement {
+  override def getKind: BindType = BindType.gotoStatement
+}
+
+case class BindConditionGotoStatement(label: BindLabel,
+                                      condition: BindExpression,
+                                      jumpIfTrue: Boolean = true)
+    extends BindStatement {
+  override def getKind: BindType = BindType.conditionGotoStatement
+}
+
+case class BindReturnStatement(expression: BindExpression)
+    extends BindStatement {
+  override def getKind: BindType = BindType.returnStatement
+}
+
+case class BindBinaryExpression(operator: BoundBinaryOperator,
                                 boundLeft: BindExpression,
                                 boundRight: BindExpression)
     extends BindExpression {
-  override def getType: TypeSymbol = bindType.result
+  override def getType: TypeSymbol = operator.result
 
-  override def getKind: BindType = bindType.bindType
+  override def getKind: BindType = operator.bindType
 }
 
 case class BindUnaryExpression(bindType: BoundUnaryOperator,
@@ -529,6 +762,14 @@ case class BindUnaryExpression(bindType: BoundUnaryOperator,
     extends BindExpression {
   override def getType: TypeSymbol = boundOperand.getType
   override def getKind: BindType = bindType.bindType
+}
+
+case class BindLabel(name: String) {
+  override def toString: String = name
+}
+
+case class BindLabelStatement(label: BindLabel) extends BindStatement {
+  override def getKind: BindType = BindType.labelStatement
 }
 
 case class BindLiteralExpression(value: Any) extends BindExpression {
@@ -591,11 +832,10 @@ case class BindConversionExpression(typeSymbol: TypeSymbol,
   override def getKind: BindType = BindType.conversionExpression
 }
 
-case class BindProgram(diagnostics:DiagnosticsBag,
-                       functions:mutable.HashMap[FunctionSymbol,BindBlockStatement],
-                       variables:mutable.HashMap[VariableSymbol,BindBlockStatement]){
-
-}
+case class BindProgram(
+    diagnostics: DiagnosticsBag,
+    functions: mutable.HashMap[FunctionSymbol, BindBlockStatement],
+    statement: BindBlockStatement) {}
 
 object BoundBinaryOperator {
 
