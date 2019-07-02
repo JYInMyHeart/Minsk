@@ -51,8 +51,11 @@ case class Binder(parent: BindScope, function: FunctionSymbol) {
     val bindType = bindTypeClause(node.functionType)
     val functionType = if (bindType == null) TypeSymbol.Void else bindType
     val declaredFuntion =
-      new FunctionSymbol(node.identifier.text, parameters.toList, functionType)
-    if (!scope.tryDeclare(declaredFuntion))
+      new FunctionSymbol(node.identifier.text,
+                         parameters.toList,
+                         functionType,
+                         node)
+    if (!scope.tryDeclareFunction(declaredFuntion))
       diagnostics.reportFunctionAlreadyDeclared(node.identifier.span,
                                                 declaredFuntion.name)
   }
@@ -64,7 +67,7 @@ case class Binder(parent: BindScope, function: FunctionSymbol) {
   def initFunction: FunctionSymbol = {
     if (function != null)
       for (p <- function.parameters)
-        scope.tryDeclare(p)
+        scope.tryDeclareVariable(p)
     function
   }
 
@@ -85,9 +88,9 @@ case class Binder(parent: BindScope, function: FunctionSymbol) {
             diagnostics.reportMissingReturnExpression(statement.keyword.span,
                                                       _function.typeSymbol)
           else
-            expression = bindConversion(statement.expression.getSpan,
-                                        _function.typeSymbol,
-                                        expression)
+            expression = bindConversionIn(statement.expression.getSpan,
+                                          _function.typeSymbol,
+                                          expression)
         }
     }
     BindReturnStatement(expression)
@@ -154,12 +157,12 @@ case class Binder(parent: BindScope, function: FunctionSymbol) {
                      typeSymbol: TypeSymbol,
                      allowExplicit: Boolean = false): BindExpression = {
     val expression = bindExpression(node)
-    bindConversion(node.getSpan, typeSymbol, expression, allowExplicit)
+    bindConversionIn(node.getSpan, typeSymbol, expression, allowExplicit)
   }
-  def bindConversion(diagnosticSpan: TextSpan,
-                     typeSymbol: TypeSymbol,
-                     expression: BindExpression,
-                     allowExplicit: Boolean = false): BindExpression = {
+  def bindConversionIn(diagnosticSpan: TextSpan,
+                       typeSymbol: TypeSymbol,
+                       expression: BindExpression,
+                       allowExplicit: Boolean = false): BindExpression = {
     val conversion = Conversion.classify(expression.getType, typeSymbol)
     if (!conversion.exists) {
       if (expression.getType != TypeSymbol.Error && typeSymbol != TypeSymbol.Error)
@@ -270,8 +273,8 @@ case class Binder(parent: BindScope, function: FunctionSymbol) {
   private def bindWhileStatement(
       statement: WhileStatement): BindWhileStatement = {
     val condition = bindExpression(statement.condition, TypeSymbol.Bool)
-    val body = bindStatement(statement.body)
-    BindWhileStatement(condition, body)
+    val (body, break, continue) = bindLoopBody(statement.body)
+    BindWhileStatement(condition, body, break, continue)
   }
 
   private def bindIfStatement(statement: IfStatement): BindIfStatement = {
@@ -289,7 +292,7 @@ case class Binder(parent: BindScope, function: FunctionSymbol) {
     val isReadOnly = statement.keyword.tokenType == TokenType.letKeyword
     val initializer = bindExpression(statement.expression)
     val variable = new VariableSymbol(name, initializer.getType, isReadOnly)
-    if (!scope.tryDeclare(variable))
+    if (!scope.tryDeclareVariable(variable))
       diagnostics.reportVariableAlreadyDeclared(statement.identifier.span, name)
     BindVariableDeclaration(variable, initializer)
   }
@@ -302,7 +305,7 @@ case class Binder(parent: BindScope, function: FunctionSymbol) {
       else identifier.text
     val declare = !identifier.isMissing
     val variable = new VariableSymbol(name, typeSymbol, isReadOnly)
-    if (declare && !scope.tryDeclare(variable))
+    if (declare && !scope.tryDeclareVariable(variable))
       diagnostics.reportFunctionAlreadyDeclared(identifier.span, name)
     variable
   }
@@ -436,12 +439,14 @@ object Binder {
                       syntax: CompilationUnit): BoundGlobalScope = {
     val parentScope = createParentScope(previous)
     val binder = Binder(parentScope, null)
-    for (function <- syntax.members) {
+    for (function <- syntax.members.filter(
+           _.isInstanceOf[FunctionDeclarationNode])) {
       binder.bindFunctionDeclaration(
         function.asInstanceOf[FunctionDeclarationNode])
     }
     val statements = ListBuffer[BindStatement]()
-    for (globalStatement <- syntax.members) {
+    for (globalStatement <- syntax.members.filter(
+           _.isInstanceOf[GlobalStatementNode])) {
       val statement = binder.bindStatement(
         globalStatement.asInstanceOf[GlobalStatementNode].statement)
       statements += statement
@@ -470,7 +475,9 @@ object Binder {
       pre = stack.pop()
       val scope = BindScope(parent)
       for (v <- pre.variables)
-        scope.tryDeclare(v)
+        scope.tryDeclareVariable(v)
+      for (f <- pre.functions)
+        scope.tryDeclareFunction(f)
       parent = scope
     }
     parent
@@ -478,7 +485,7 @@ object Binder {
 
   private def createRootScope(): BindScope = {
     val result = BindScope(null)
-    BuiltinFunctions.getAll.foreach(result.tryDeclare)
+    BuiltinFunctions.getAll.foreach(result.tryDeclareFunction)
     result
   }
 }
@@ -528,7 +535,7 @@ abstract class BindTreeRewriter {
     val body = rewriteStatement(n.body)
     if (condition == n.condition && body == n.body)
       return n
-    BindWhileStatement(condition, body)
+    BindWhileStatement(condition, body, n.breakLabel, n.continueLabel)
   }
 
   def rewriteBindForStatement(n: BindForStatement): BindStatement = {
@@ -703,8 +710,11 @@ case class BindIfStatement(condition: BindExpression,
 
 }
 
-case class BindWhileStatement(condition: BindExpression, body: BindStatement)
-    extends BindStatement {
+case class BindWhileStatement(condition: BindExpression,
+                              body: BindStatement,
+                              breakLabel: BindLabel,
+                              continueLabel: BindLabel)
+    extends BindLoopStatement(breakLabel, continueLabel) {
   override def getKind: BindType = BindType.whileStatement
 
 }

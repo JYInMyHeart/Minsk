@@ -31,9 +31,13 @@ case class Compilation(ast: SyntaxTree, previous: Compilation) {
       variables: mutable.HashMap[VariableSymbol, Any]): EvaluationResult = {
     val diagnosticsBag = ast.diagnostics.concat(globalScope.diagnostics)
     if (!diagnosticsBag.isEmpty)
-      return EvaluationResult(diagnosticsBag, null.asInstanceOf[Any])
-    val evaluator = Eval(variables)
-    val value = evaluator.eval(globalScope.statement)
+      return EvaluationResult(diagnosticsBag, null)
+    val program = Binder.bindProgram(globalScope)
+    if (!program.diagnostics.isEmpty) {
+      return EvaluationResult(program.diagnostics, null)
+    }
+    val evaluator = new Eval(variables, program)
+    val value = evaluator.evaluate()
     EvaluationResult(DiagnosticsBag(), value)
   }
 }

@@ -1,22 +1,21 @@
 package binder
 
 import eval.DiagnosticsBag
-import symbol.{FunctionSymbol, VariableSymbol,Symbol}
+import symbol.{FunctionSymbol, VariableSymbol, Symbol}
 
 import scala.collection.mutable
 
 case class BindScope(parent: BindScope) {
-  private val symbols:mutable.HashMap[String,T forSome {type T <: Symbol}] =
+  private val symbols: mutable.HashMap[String, Symbol] =
     mutable.HashMap()
 
+  def tryDeclareVariable(variableSymbol: VariableSymbol): Boolean =
+    tryDeclareSymbol(variableSymbol)
 
+  def tryDeclareFunction(functionSymbol: FunctionSymbol): Boolean =
+    tryDeclareSymbol(functionSymbol)
 
-  def tryDeclare(variableSymbol: VariableSymbol): Boolean = tryDeclareSymbol(variableSymbol)
-
-
-  def tryDeclare(functionSymbol: FunctionSymbol):Boolean = tryDeclareSymbol(functionSymbol)
-
-  def tryDeclareSymbol[A <: Symbol](symbol: A):Boolean = {
+  def tryDeclareSymbol[A <: Symbol](symbol: A): Boolean = {
     if (symbols.contains(symbol.name))
       false
     else {
@@ -25,16 +24,17 @@ case class BindScope(parent: BindScope) {
     }
   }
 
+  def tryLookupVariable(name: String): VariableSymbol =
+    tryLookupSymbol[VariableSymbol](name)
 
-  def tryLookupVariable(name: String): VariableSymbol = tryLookupSymbol[VariableSymbol](name)
+  def tryLookupFunction(name: String): FunctionSymbol =
+    tryLookupSymbol[FunctionSymbol](name)
 
-  def tryLookupFunction(name: String): FunctionSymbol = tryLookupSymbol[FunctionSymbol](name)
-
-  def tryLookupSymbol[A <: Symbol](name:String):A = {
-    if (symbols.contains(name)){
+  def tryLookupSymbol[A <: Symbol](name: String): A = {
+    if (symbols.contains(name)) {
       symbols(name) match {
-        case x:A => return x
-        case _ => return null.asInstanceOf[A]
+        case x: A => return x
+        case _    => return null.asInstanceOf[A]
       }
     }
     if (parent == null)
@@ -43,22 +43,23 @@ case class BindScope(parent: BindScope) {
   }
 
   def getDeclaredVariables: List[VariableSymbol] = {
-    getDeclaredSymbols[VariableSymbol]()
+    symbols.values
+      .filter(_.isInstanceOf[VariableSymbol])
+      .map(_.asInstanceOf[VariableSymbol])
+      .toList
   }
 
   def getDeclaredFunctions: List[FunctionSymbol] = {
-    getDeclaredSymbols[FunctionSymbol]()
+    symbols.values
+      .filter(_.isInstanceOf[FunctionSymbol])
+      .map(_.asInstanceOf[FunctionSymbol])
+      .toList
   }
-
-  def getDeclaredSymbols[A <: Symbol]():List[A] ={
-    symbols.values.map(_.asInstanceOf[A]).toList
-  }
-
 
 }
 
 case class BoundGlobalScope(previous: BoundGlobalScope,
                             diagnostics: DiagnosticsBag,
                             variables: List[VariableSymbol],
-                            functions:List[FunctionSymbol],
+                            functions: List[FunctionSymbol],
                             statement: List[BindStatement]) {}

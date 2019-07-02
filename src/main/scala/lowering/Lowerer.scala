@@ -1,18 +1,22 @@
 package lowering
 
 import binder.{
+  BindAssignmentExpression,
   BindBinaryExpression,
   BindBlockStatement,
   BindConditionGotoStatement,
+  BindExpressionStatement,
   BindForStatement,
   BindGotoStatement,
   BindIfStatement,
   BindLabel,
   BindLabelStatement,
+  BindLiteralExpression,
   BindStatement,
   BindTreeRewriter,
   BindVariableDeclaration,
   BindVariableExpression,
+  BindWhileStatement,
   BoundBinaryOperator
 }
 import parser.TokenType
@@ -30,8 +34,7 @@ class Lowerer extends BindTreeRewriter {
     BindLabel(name)
   }
 
-  protected override def rewriteBindIfStatement(
-      n: BindIfStatement): BindStatement = {
+  override def rewriteBindIfStatement(n: BindIfStatement): BindStatement = {
     if (n.elseStatement == null) {
       val endLabel = generateLabel()
       val gotoFalse =
@@ -59,7 +62,28 @@ class Lowerer extends BindTreeRewriter {
     }
   }
 
-  protected override def rewriteForStatement(
+  override def rewriteBindWhileStatement(
+      node: BindWhileStatement): BindStatement = {
+    val bodyLabel = generateLabel()
+    val gotoContinue = BindGotoStatement(node.continueLabel)
+    val bodyLabelStatement = BindLabelStatement(bodyLabel)
+    val continueLabelStatement = BindLabelStatement(node.continueLabel)
+    val gotoTrue = BindConditionGotoStatement(bodyLabel, node.condition)
+    val breakLabelStatement = BindLabelStatement(node.breakLabel)
+
+    val result = BindBlockStatement(
+      List(
+        gotoContinue,
+        bodyLabelStatement,
+        node.body,
+        continueLabelStatement,
+        gotoTrue,
+        breakLabelStatement
+      ))
+    rewriteStatement(result)
+  }
+
+  override def rewriteBindForStatement(
       node: BindForStatement): BindStatement = {
     val variableDeclaration =
       BindVariableDeclaration(node.variable, node.initializer)
@@ -78,7 +102,36 @@ class Lowerer extends BindTreeRewriter {
       BindVariableExpression(upperBoundSymbol)
     )
     val continueLabelStatement = BindLabelStatement(node.continueLabel)
-
+    val increment = BindExpressionStatement(
+      BindAssignmentExpression(
+        node.variable,
+        BindBinaryExpression(
+          BoundBinaryOperator.bind(TokenType.plusToken,
+                                   TypeSymbol.Int,
+                                   TypeSymbol.Int),
+          variableExpression,
+          BindLiteralExpression(1)
+        )
+      )
+    )
+    val whileBody = BindBlockStatement(
+      List(
+        node.body,
+        continueLabelStatement,
+        increment
+      )
+    )
+    val whileStatement = BindWhileStatement(condition,
+                                            whileBody,
+                                            node.breakLabel,
+                                            node.continueLabel)
+    val result = BindBlockStatement(
+      List(
+        variableDeclaration,
+        upperBoundDeclaration,
+        whileStatement
+      ))
+    rewriteStatement(result)
   }
 }
 

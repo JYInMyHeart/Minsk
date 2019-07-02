@@ -19,3 +19,16 @@ object LocalVariableSymbol {
             isReadOnly: Boolean): LocalVariableSymbol =
     new LocalVariableSymbol(name, typeSymbol, isReadOnly)
 }
+class GlobalVariableSymbol(name: String,
+                           typeSymbol: TypeSymbol,
+                           isReadOnly: Boolean)
+    extends VariableSymbol(name, typeSymbol, isReadOnly) {
+  override def kind: SymbolKind = SymbolKind.GlobalVariable
+}
+
+object GlobalVariableSymbol {
+  def apply(name: String,
+            typeSymbol: TypeSymbol,
+            isReadOnly: Boolean): GlobalVariableSymbol =
+    new GlobalVariableSymbol(name, typeSymbol, isReadOnly)
+}

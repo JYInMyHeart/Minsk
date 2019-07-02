@@ -1,5 +1,5 @@
 package symbol
-case class TypeSymbol(name:String) extends Symbol(name){
+case class TypeSymbol(override val name: String) extends Symbol(name) {
   override def kind: SymbolKind = SymbolKind.Type
 }
 object TypeSymbol {

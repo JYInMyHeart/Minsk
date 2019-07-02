@@ -1,7 +1,7 @@
 package eval
 
 import binder._
-import parser.BindType
+import parser.{BindType, TokenType}
 import symbol._
 
 import scala.collection.immutable.Stack
@@ -12,17 +12,17 @@ import scala.util.Random
 class Eval(program: BindProgram) {
   private var lastValue: Any = _
 
-  private val locals: Stack[mutable.HashMap[VariableSymbol, Any]] = Stack()
+  private var locals: Stack[mutable.HashMap[VariableSymbol, Any]] = Stack()
 
   private var globals: mutable.HashMap[VariableSymbol, Any] = _
 
-  private var random: Random = _
+  private var random: Random = Random
 
   def this(variables: mutable.HashMap[VariableSymbol, Any],
            program: BindProgram) {
     this(program)
     globals = variables
-    locals.push(mutable.HashMap[VariableSymbol, Any]())
+    locals = locals.push(mutable.HashMap[VariableSymbol, Any]())
   }
   def evaluate() = eval(program.statement)
 
@@ -39,71 +39,35 @@ class Eval(program: BindProgram) {
     while (index < body.bindStatements.length) {
       val statement = body.bindStatements(index)
       (statement.getKind, statement) match {
-        case (BindType.blockStatement, s: BindBlockStatement) =>
-          evalBlockStatement(s)
-          index += 1
         case (BindType.expressionStatement, s: BindExpressionStatement) =>
           evalExpressionStatement(s)
           index += 1
         case (BindType.variableDeclaration, s: BindVariableDeclaration) =>
-          evalVariableStatement(s)
+          evalVariableDeclaration(s)
           index += 1
-        case (BindType.ifStatement, s: BindIfStatement) =>
-          evalIfStatement(s)
+        case (BindType.gotoStatement, s: BindGotoStatement) =>
+          index = labelToIndex(s.label)
+        case (BindType.labelStatement, s: BindLabelStatement) =>
           index += 1
-        case (BindType.whileStatement, s: BindWhileStatement) =>
-          evalWhileStatement(s)
-          index += 1
-        case (BindType.forStatement, s: BindForStatement) =>
-          evalForStatement(s)
-          index += 1
+        case (BindType.returnStatement, s: BindReturnStatement) =>
+          lastValue =
+            if (s.expression == null) null else evalExpression(s.expression)
+          return lastValue
         case _ =>
           throw new Exception(s"Unexpected statement ${statement.getKind}")
       }
     }
-
     lastValue
-  }
-
-  def evalForStatement(statement: BindForStatement): Unit = {
-    val start = evalExpression(statement.initializer)
-    val end = evalExpression(statement.upper)
-    for (i <- start
-           .asInstanceOf[Int]
-           to end.asInstanceOf[Int]) {
-      variables(statement.variable) = i
-      evalStatement(statement.body)
-    }
   }
 
   def evalFuncStatement(s: BindFuncStatement): Unit = {
     lastValue = "<Function>"
   }
 
-  def evalWhileStatement(statement: BindWhileStatement): Unit = {
-    while (evalExpression(statement.condition)
-             .asInstanceOf[Boolean]) evalStatement(statement.body)
-  }
-
-  def evalIfStatement(statement: BindIfStatement): Unit = {
-    val value = evalExpression(statement.condition)
-    value match {
-      case true => evalStatement(statement.thenStatement)
-      case false =>
-        if (statement.elseStatement != null)
-          evalStatement(statement.elseStatement)
-    }
-  }
-
-  def evalVariableStatement(statement: BindVariableDeclaration): Unit = {
+  def evalVariableDeclaration(statement: BindVariableDeclaration): Unit = {
     val value = evalExpression(statement.initializer)
-    variables(statement.variableSymbol) = value
     lastValue = value
-  }
-
-  def evalBlockStatement(statement: BindBlockStatement): Unit = {
-    for (s <- statement.bindStatements)
-      evalStatement(s)
+    assign(statement.variableSymbol, value)
   }
 
   def evalExpressionStatement(statement: BindExpressionStatement): Unit = {
@@ -113,14 +77,7 @@ class Eval(program: BindProgram) {
   def evalExpression(expression: BindExpression): Any = {
     expression match {
       case node: BindLiteralExpression =>
-        node.value match {
-          case i: Double  => i
-          case i: Boolean => i
-          case i: Int     => i
-          case i: String  => i
-          case _ =>
-            throw new Exception(s"unknown literal type")
-        }
+        node.value
       case node: BindBinaryExpression =>
         val left = evalExpression(node.boundLeft)
         val right = evalExpression(node.boundRight)
@@ -200,10 +157,15 @@ class Eval(program: BindProgram) {
           case _                              => throw new Exception("unknown node type")
         }
       case node: BindVariableExpression =>
-        variables(node.variableSymbol)
+        if (node.variableSymbol.kind == SymbolKind.GlobalVariable)
+          globals(node.variableSymbol)
+        else {
+          val local = locals.head
+          local(node.variableSymbol)
+        }
       case node: BindAssignmentExpression =>
         val value = evalExpression(node.expression)
-        variables(node.variable) = value
+        assign(node.variable, value)
         value
       case node: BindFuncCallExpression =>
         node.functionSymbol match {
@@ -214,9 +176,19 @@ class Eval(program: BindProgram) {
             null
           case BuiltinFunctions.rnd =>
             val max = evalExpression(node.paramList.head)
-            Random.nextInt(max.asInstanceOf[Double].toInt)
+            random.nextInt(max.asInstanceOf[Int])
           case _ =>
-            throw new Exception(s"Unexpected function ${node.functionSymbol}")
+            val local = mutable.HashMap[VariableSymbol, Any]()
+            for (i <- node.paramList.indices) {
+              val parameter = node.functionSymbol.parameters(i)
+              val value = evalExpression(node.paramList(i))
+              local += parameter -> value
+            }
+            locals = locals.push(local)
+            val statement = program.functions(node.functionSymbol)
+            val result = eval(statement)
+            locals = locals.pop
+            result
         }
       case node: BindConversionExpression =>
         val value = evalExpression(node.bindExpression)
@@ -232,11 +204,19 @@ class Eval(program: BindProgram) {
       case _ => throw new Exception("unknown node type")
     }
   }
+
+  private def assign(variable: VariableSymbol, value: Any): Unit = {
+    if (variable.kind == SymbolKind.GlobalVariable)
+      globals(variable) = value
+    else {
+      val local = locals.head
+      local(variable) = value
+    }
+  }
 }
 
 object Eval {
-  def apply(variables: mutable.HashMap[VariableSymbol, Any]): Eval =
-    new Eval(variables)
+  def apply(program: BindProgram): Eval = new Eval(program)
 }
 
 case class EvaluationResult(diagnosticsBag: DiagnosticsBag, value: Any)
