@@ -292,12 +292,10 @@ case class Binder(parent: BindScope, function: FunctionSymbol) {
 
   private def bindVariableDeclaration(
       statement: VariableDeclarationNode): BindVariableDeclaration = {
-    val name = statement.identifier.text
+    val name = statement.identifier
     val isReadOnly = statement.keyword.tokenType == TokenType.letKeyword
     val initializer = bindExpression(statement.expression)
-    val variable = new VariableSymbol(name, initializer.getType, isReadOnly)
-    if (!scope.tryDeclareVariable(variable))
-      diagnostics.reportVariableAlreadyDeclared(statement.identifier.span, name)
+    val variable = bindVariable(name, initializer.getType, isReadOnly)
     BindVariableDeclaration(variable, initializer)
   }
 
@@ -308,7 +306,10 @@ case class Binder(parent: BindScope, function: FunctionSymbol) {
       if (identifier.text == null || identifier.text == "") "?"
       else identifier.text
     val declare = !identifier.isMissing
-    val variable = new VariableSymbol(name, typeSymbol, isReadOnly)
+    val variable =
+      if (_function == null)
+        new GlobalVariableSymbol(name, typeSymbol, isReadOnly)
+      else new LocalVariableSymbol(name, typeSymbol, isReadOnly)
     if (declare && !scope.tryDeclareVariable(variable))
       diagnostics.reportFunctionAlreadyDeclared(identifier.span, name)
     variable

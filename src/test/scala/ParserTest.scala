@@ -26,6 +26,7 @@ class ParserTest extends UnitSpec {
         AssertingEnumerator.flatten(expression.root).iterator)
 
       e.assertNode(TokenType.compilationUnit)
+      e.assertNode(TokenType.globalStatement)
       e.assertNode(TokenType.expressionStatement)
       e.assertNode(TokenType.binaryExpression)
       e.assertNode(TokenType.binaryExpression)
@@ -42,6 +43,7 @@ class ParserTest extends UnitSpec {
         AssertingEnumerator.flatten(expression.root).iterator)
 
       e.assertNode(TokenType.compilationUnit)
+      e.assertNode(TokenType.globalStatement)
       e.assertNode(TokenType.expressionStatement)
       e.assertNode(TokenType.binaryExpression)
       e.assertNode(TokenType.nameExpression)
@@ -67,6 +69,7 @@ class ParserTest extends UnitSpec {
       val e = AssertingEnumerator(
         AssertingEnumerator.flatten(expression.root).iterator)
       e.assertNode(TokenType.compilationUnit)
+      e.assertNode(TokenType.globalStatement)
       e.assertNode(TokenType.expressionStatement)
       e.assertNode(TokenType.binaryExpression)
       e.assertNode(TokenType.unaryExpression)
@@ -80,6 +83,7 @@ class ParserTest extends UnitSpec {
       val e = AssertingEnumerator(
         AssertingEnumerator.flatten(expression.root).iterator)
       e.assertNode(TokenType.compilationUnit)
+      e.assertNode(TokenType.globalStatement)
       e.assertNode(TokenType.expressionStatement)
       e.assertNode(TokenType.unaryExpression)
       e.assertToken(un, unText)
@@ -99,7 +103,8 @@ class ParserTest extends UnitSpec {
   }
 
 //  it should "nice" in {
-//    parseBinaryExpressionHonorsPrecedences(TokenType.equalsEqualsToken,TokenType.modToken)
+//    parseBinaryExpressionHonorsPrecedences(TokenType.pipeToken,
+//                                           TokenType.minusToken)
 //  }
 
   getUnaryOperatorPairsData.foreach { x =>
@@ -107,6 +112,5 @@ class ParserTest extends UnitSpec {
       parseUnaryExpressionHonorsPrecedences(x._1, x._2)
     }
   }
-
 
 }

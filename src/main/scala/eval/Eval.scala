@@ -219,10 +219,10 @@ class Eval(program: BindProgram) {
 
   private def assign(variable: VariableSymbol, value: Any): Unit = {
     if (variable.kind == SymbolKind.GlobalVariable)
-      globals(variable) = value
+      globals += variable -> value
     else {
       val local = locals.head
-      local(variable) = value
+      local += variable -> value
     }
   }
 }
