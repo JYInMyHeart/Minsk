@@ -31,7 +31,7 @@ class Eval(program: BindProgram) {
     for (i <- body.bindStatements.indices) {
       body.bindStatements(i) match {
         case statement: BindLabelStatement =>
-          labelToIndex += statement.label -> (i + 1)
+          labelToIndex += statement.label -> (i)
         case _ =>
       }
     }
@@ -47,7 +47,13 @@ class Eval(program: BindProgram) {
           index += 1
         case (BindType.gotoStatement, s: BindGotoStatement) =>
           index = labelToIndex(s.label)
-        case (BindType.labelStatement, s: BindLabelStatement) =>
+        case (BindType.conditionGotoStatement, s: BindConditionGotoStatement) =>
+          val condition = evalExpression(s.condition)
+          if (condition == s.jumpIfTrue)
+            index = labelToIndex(s.label)
+          else
+            index += 1
+        case (BindType.labelStatement, _: BindLabelStatement) =>
           index += 1
         case (BindType.returnStatement, s: BindReturnStatement) =>
           lastValue =
@@ -169,7 +175,10 @@ class Eval(program: BindProgram) {
         value
       case node: BindFuncCallExpression =>
         node.functionSymbol match {
-          case BuiltinFunctions.input => StdIn.readLine()
+          case BuiltinFunctions.input       => StdIn.readLine()
+          case BuiltinFunctions.inputBool   => StdIn.readLine().toBoolean
+          case BuiltinFunctions.inputDouble => StdIn.readLine().toDouble
+          case BuiltinFunctions.inputInt    => StdIn.readLine().toInt
           case BuiltinFunctions.mPrint =>
             val msg = evalExpression(node.paramList.head)
             println(msg)
@@ -177,6 +186,9 @@ class Eval(program: BindProgram) {
           case BuiltinFunctions.rnd =>
             val max = evalExpression(node.paramList.head)
             random.nextInt(max.asInstanceOf[Int])
+          case BuiltinFunctions.doubleToStr | BuiltinFunctions.boolToStr |
+              BuiltinFunctions.intToStr =>
+            evalExpression(node.paramList.head).toString
           case _ =>
             val local = mutable.HashMap[VariableSymbol, Any]()
             for (i <- node.paramList.indices) {

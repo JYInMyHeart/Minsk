@@ -10,5 +10,6 @@ object TypeSymbol {
   val Double = new TypeSymbol("double")
   val String = new TypeSymbol("string")
   val Void = new TypeSymbol("void")
+  val Object = new TypeSymbol("object")
 
 }

@@ -47,7 +47,9 @@ class Parser(sourceText: SourceText) {
     if (kind == current.getKind)
       return nextToken
     diagnostics.reportUnexpectedToken(current.span, current.getKind, kind)
-    Token(kind, current.position, null, null)
+    val previousToken = current
+    nextToken
+    Token(kind, previousToken.position, null, null)
   }
 
   def parseGlobalStatement(): GlobalStatementNode = {
@@ -201,25 +203,31 @@ class Parser(sourceText: SourceText) {
     ParamStatement(paramName, paramType)
   }
 
-  def parseFuncStatement(): FuncStatement = {
-    val func = eat(funcKeyword)
-    val id = eat(funcCallExpression)
-    eat(openParenthesisToken)
-    var parameters: List[ParamStatement] = List()
-    while (current.tokenType != closeParenthesisToken) {
-      parameters :+= parseParamStatement()
-    }
-    eat(closeParenthesisToken)
-    eat(colonToken)
-    val paramType = eat(TokenType.typeToken)
-    val returnType =
-      ParamStatement(
-        Token(returnKeyword, current.position, current.text, current.value),
-        paramType)
-    eat(equalsToken)
-    val body = parseStatement()
-    FuncStatement(func, id, parameters, returnType, body)
-  }
+//  def parseFuncStatement(): FuncStatement = {
+//    val func = eat(funcKeyword)
+//    val id = eat(funcCallExpression)
+//    eat(openParenthesisToken)
+//    var parameters: List[ParamStatement] = List()
+//    var firstParam = true
+//    while (current.tokenType != closeParenthesisToken) {
+//      if (firstParam) {
+//        firstParam = false
+//      } else {
+//        eat(TokenType.commaToken)
+//      }
+//      parameters :+= parseParamStatement()
+//    }
+//    eat(closeParenthesisToken)
+//    eat(colonToken)
+//    val paramType = eat(TokenType.typeToken)
+//    val returnType =
+//      ParamStatement(
+//        Token(returnKeyword, current.position, current.text, current.value),
+//        paramType)
+//    eat(equalsToken)
+//    val body = parseStatement()
+//    FuncStatement(func, id, parameters, returnType, body)
+//  }
 
   def parseBreakStatement(): Statement = {
     val keyword = eat(TokenType.breakKeyword)
@@ -255,8 +263,6 @@ class Parser(sourceText: SourceText) {
         parseWhileStatement()
       case TokenType.forKeyword =>
         parseForStatement()
-      case TokenType.funcKeyword =>
-        parseFuncStatement()
       case TokenType.breakKeyword =>
         parseBreakStatement()
       case TokenType.continueKeyword =>
@@ -358,7 +364,13 @@ class Parser(sourceText: SourceText) {
 
   def parseArgument(): List[Expression] = {
     var paramsList = List[Expression]()
+    var firstArguement = true
     while (current.getKind != closeParenthesisToken && current.getKind != eofToken) {
+      if (firstArguement) {
+        firstArguement = false
+      } else {
+        eat(TokenType.commaToken)
+      }
       val expression = parseExpression()
       paramsList :+= expression
     }

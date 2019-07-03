@@ -34,7 +34,6 @@ object Main {
         )
       } else {
         previous = compilation
-        println(result.value)
       }
     }
   }
@@ -70,7 +69,8 @@ object Main {
   }
 
   def main(args: Array[String]): Unit = {
-    commandLine()
+//    commandLine()
 
+    loadFile("test1.xck")
   }
 }

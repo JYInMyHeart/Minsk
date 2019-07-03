@@ -1,7 +1,58 @@
-{
+def in(a:int):int{
+    return a * a
+ }
 
-def f(a:Double):Double = {
-    a + 1
-  }
-  f(3)
+def out(a:int):int{
+    return in(a) * in(a)
+}
+
+var a = out(10)
+
+mPrint(intToStr(a / 100))
+
+
+def sum(n: int): int
+{
+    var i = 0
+    var result = 0
+    while (true)
+    {
+        if (i == n) return result
+        result = result + i
+        i = i + 1
+    }
+    var z = 0
+}
+
+mPrint(intToStr(sum(100)))
+
+def test(a:double,b:bool):void{
+    if(b){
+        mPrint(doubleToStr(a + 1))
+    }else{
+        mPrint(doubleToStr(a - 1))
+    }
+}
+let b = inputDouble()
+let c = inputBool()
+test(b,c)
+
+
+for d = 0 to 10 {
+    if(d == 4){
+        mPrint("d is 4!")
+        break
+    }else{
+        mPrint(intToStr(d))
+    }
+}
+
+
+for d = 0 to 10 {
+    if(d == 4){
+        continue
+
+    }
+        mPrint(intToStr(d))
+
 }

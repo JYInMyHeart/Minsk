@@ -20,8 +20,12 @@ case class Binder(parent: BindScope, function: FunctionSymbol) {
       TypeSymbol.Bool
     case "int" =>
       TypeSymbol.Int
-    case "String" =>
+    case "string" =>
       TypeSymbol.String
+    case "void" =>
+      TypeSymbol.Void
+    case "double" =>
+      TypeSymbol.Double
     case _ => null
   }
 
@@ -50,14 +54,14 @@ case class Binder(parent: BindScope, function: FunctionSymbol) {
     }
     val bindType = bindTypeClause(node.functionType)
     val functionType = if (bindType == null) TypeSymbol.Void else bindType
-    val declaredFuntion =
+    val declaredFunction =
       new FunctionSymbol(node.identifier.text,
                          parameters.toList,
                          functionType,
                          node)
-    if (!scope.tryDeclareFunction(declaredFuntion))
+    if (!scope.tryDeclareFunction(declaredFunction))
       diagnostics.reportFunctionAlreadyDeclared(node.identifier.span,
-                                                declaredFuntion.name)
+                                                declaredFunction.name)
   }
 
   val diagnostics: DiagnosticsBag = DiagnosticsBag()
@@ -114,7 +118,7 @@ case class Binder(parent: BindScope, function: FunctionSymbol) {
                                                statement.keyword.text)
       return bindErrorStatement()
     }
-    val continueLabel = loopStack.head._1
+    val continueLabel = loopStack.head._2
     BindGotoStatement(continueLabel)
   }
 
@@ -136,7 +140,7 @@ case class Binder(parent: BindScope, function: FunctionSymbol) {
         bindForStatement(s)
       case (TokenType.returnStatement, s: ReturnStatement) =>
         bindReturnStatement(s)
-      case (TokenType.breakKeyword, s: BreakStatement) =>
+      case (TokenType.breakStatement, s: BreakStatement) =>
         bindBreakStatement(s)
       case (TokenType.continueStatement, s: ContinueStatement) =>
         bindContinueStatement(s)
@@ -589,7 +593,7 @@ abstract class BindTreeRewriter {
             builder += node.paramList(j)
         }
       }
-      if (builder.isEmpty)
+      if (builder.nonEmpty)
         builder += newArguement
     }
     if (builder.isEmpty)

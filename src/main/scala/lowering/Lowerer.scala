@@ -47,7 +47,7 @@ class Lowerer extends BindTreeRewriter {
       val elseLabel = generateLabel()
       val endLabel = generateLabel()
       val gotoFalse =
-        BindConditionGotoStatement(endLabel, n.condition, jumpIfTrue = false)
+        BindConditionGotoStatement(elseLabel, n.condition, jumpIfTrue = false)
       val gotoEndStatement = BindGotoStatement(endLabel)
       val elseLabelStatement = BindLabelStatement(elseLabel)
       val endLabelStatement = BindLabelStatement(endLabel)
@@ -121,10 +121,8 @@ class Lowerer extends BindTreeRewriter {
         increment
       )
     )
-    val whileStatement = BindWhileStatement(condition,
-                                            whileBody,
-                                            node.breakLabel,
-                                            node.continueLabel)
+    val whileStatement =
+      BindWhileStatement(condition, whileBody, node.breakLabel, generateLabel())
     val result = BindBlockStatement(
       List(
         variableDeclaration,
