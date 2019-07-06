@@ -1,10 +1,1 @@
-var d = 0
-while (d < 10) {
-    d = d + 1
-
-    if(d == 6){
-        break
-    }
- mPrint(intToStr(d))
-
-}
+def f(a:int):int{return}
